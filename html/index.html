@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine control panel</title>
+    <link rel="stylesheet" href='css/main.css' />
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/main.js"></script>
+</head>
+
+<body>
+    <div class="grid">
+        <div class="grid__row">
+            <div class="grid__item">
+                <div class="tabs">
+                    <input id="tab1" type="radio" name="tabs" checked>
+                    <label for="tab1" title="Config">Configuration</label>
+
+                    <input id="tab2" type="radio" name="tabs">
+                    <label for="tab2" title="Direct">Direct control</label>
+
+                    <input id="tab3" type="radio" name="tabs">
+                    <label for="tab3" title="Record">Record gcode</label>
+
+                    <section id="content-tab1">
+                        <p>
+                            <ul class='list'>
+                                <li>
+                                    <table class='config'>
+                                        <tr>
+                                            <th><input type='button' value='Set config'></th>
+                                            <th>&nbsp;</th>
+                                            <th>&nbsp;</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan=3>Machine 1</th>
+                                        </tr>
+                                        <tr>
+                                            <th>PINS</th>
+                                            <th>Type</th>
+                                            <th>Description</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <select class='multi' name="PINS" multiple>
+                                                <option value='1'>GPIO1</option>
+                                                <option value='2'>GPIO2</option>
+                                                <option value='3'>GPIO3</option>
+                                                <option value='4'>GPIO4</option>
+                                                <option value='4'>GPIO5</option>
+                                                <option value='6'>GPIO6</option>
+                                                <option value='7'>GPIO7</option>
+                                                <option value='8'>GPIO8</option>
+                                                <option value='9'>GPIO9</option>
+                                                <option value='10'>GPIO10</option>
+                                                <option value='11'>GPIO11</option>
+                                                <option value='12'>GPIO12</option>
+                                                <option value='13'>GPIO13</option>
+                                                <option value='14'>GPIO14</option>
+                                                <option value='15'>GPIO15</option>
+                                                <option value='16'>GPIO16</option>
+                                                <option value='17'>GPIO17</option>
+                                                <option value='18'>GPIO18</option>
+                                            </select>
+                                            </td>
+                                            <td>
+                                                <select class='multi' name="Type" size="3">
+                                                <option value='0' selected>Undefined</option>
+                                                <option value='1'>Motor</option>
+                                                <option value='2'>Sensor</option>
+                                                <option value='3'>Weigher</option>
+                                            </select>
+                                            </td>
+                                            <td valign="top">
+                                                <input name="description"></input>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </li>
+                            </ul>
+                        </p>
+                    </section>
+                    <section id="content-tab2">
+                        <p>
+                            On\off any motor directly...
+                        </p>
+                    </section>
+                    <section id="content-tab3">
+                        <p>
+                            Record gcode for automation action...
+                        </p>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <!--
+        <div class="grid__row">
+            <div class="grid__item">2
+            </div>
+        </div>
+
+        <div class="grid__row">
+            <div class="grid__item">1</div>
+            <div class="grid__item">2</div>
+            <div class="grid__item">3</div>
+            <div class="grid__item">4</div>
+        </div>
+        -->
+    </div>
+</body>
+
+</html>
