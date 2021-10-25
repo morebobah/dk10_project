@@ -29,6 +29,16 @@
             "projectEnvName": "featheresp32",
             "toolchainBinDir": "C:/Users/Alex/.platformio/packages/toolchain-xtensa32/bin",
             "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "platformio-debug",
+            "request": "launch",
+            "name": "PIO Debug (without uploading)",
+            "executable": "D:/Documents/PlatformIO/Projects/dk10_project/.pio/build/featheresp32/firmware.elf",
+            "projectEnvName": "featheresp32",
+            "toolchainBinDir": "C:/Users/Alex/.platformio/packages/toolchain-xtensa32/bin",
+            "internalConsoleOptions": "openOnSessionStart",
+            "loadMode": "manual"
         }
     ]
 }
