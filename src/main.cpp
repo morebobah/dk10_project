@@ -2,15 +2,23 @@
 #include <FreeRTOS.h>
 #include <Wire.h>
 #include <Adafruit_MCP23X17.h>
+#include "Motor.h"
+#include "Sensor.h"
+#include "Weigher.h"
 
+#define RX 4
+#define TX 5
+
+HardwareSerial Serial485(1);
 
 Adafruit_MCP23X17 mcp1;
 Adafruit_MCP23X17 mcp2;
 Adafruit_MCP23X17 mcp3;
 Adafruit_MCP23X17 mcp4;
 
-
-
+Motor m1(&mcp1, 0);
+Sensor s1(&mcp1, 1);
+Weigher w1(&Serial485,1);
 
 void setup() {
   /* Hardware address A3A2A1
@@ -27,6 +35,7 @@ void setup() {
   mcp2.begin_I2C(0x21);
   mcp3.begin_I2C(0x22);
   mcp4.begin_I2C(0x23);
+  Serial485.begin(9600);
 
 }
 

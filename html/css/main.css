@@ -1,0 +1,302 @@
+@import url("https://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css");
+
+/*flex разметка*/
+
+.grid {
+    border: solid 1px #7BA7AB;
+}
+
+.grid__row {
+    display: flex;
+    flex-direction: row;
+}
+
+.grid__item {
+    flex: 1;
+    padding: 12px;
+    border: solid 1px #7BA7AB;
+    background: #F9F0DA;
+}
+
+
+/* flex разметка*/
+
+.rounded {
+    counter-reset: li;
+    list-style: none;
+    font: 14px "Trebuchet MS", "Lucida Sans";
+    padding: 10px;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .5);
+}
+
+.rounded a {
+    position: relative;
+    display: block;
+    padding: .4em .4em .4em 2em;
+    margin: .5em 0;
+    background: #F9F0DA;
+    /* #dad2ca */
+    color: #444;
+    text-decoration: none;
+    border-radius: .3em;
+    transition: .3s ease-out;
+}
+
+.rounded a:hover {
+    background: #E9E4E0;
+}
+
+.rounded a:hover:before {
+    transform: translateX(10px);
+}
+
+.rounded a:before {
+    content: counter(li);
+    counter-increment: li;
+    position: absolute;
+    left: -1.3em;
+    top: 50%;
+    margin-top: -1.3em;
+    background: #8FD4C1;
+    height: 2em;
+    width: 2em;
+    line-height: 2em;
+    border: .3em solid white;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 2em;
+    transition: all .3s ease-out;
+}
+
+.config {
+    background-color: rgba(36, 51, 23, 0.5);
+    border: 1px solid #F9F0DA;
+}
+
+.multi {
+    height: 100px;
+}
+
+.list {
+    list-style-type: none;
+}
+
+
+/*Поле поиска*/
+
+* {
+    box-sizing: border-box;
+}
+
+form {
+    position: relative;
+    width: 100%;
+    margin: 0 auto;
+}
+
+input {
+    width: 100%;
+    height: 42px;
+    padding-left: 10px;
+    border: 2px solid #7BA7AB;
+    border-radius: 5px;
+    outline: none;
+    background: #F9F0DA;
+    color: #9E9C9C;
+}
+
+select {
+    width: 100%;
+    height: 42px;
+    padding-left: 10px;
+    border: 2px solid #7BA7AB;
+    border-radius: 5px;
+    outline: none;
+    background: #F9F0DA;
+    color: #9E9C9C;
+}
+
+button {
+    position: absolute;
+    top: 0;
+    right: 0px;
+    width: 42px;
+    height: 42px;
+    border: none;
+    background: #7BA7AB;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+}
+
+button:before {
+    content: "\f002";
+    font-family: FontAwesome;
+    font-size: 16px;
+    color: #F9F0DA;
+}
+
+
+/*конец стилей для поля поиска*/
+
+
+/* Базовый контейнер табов */
+
+.tabs {
+    min-width: 480px;
+    max-width: 100%;
+    padding: 0px;
+    margin: 0 auto;
+    float: left;
+}
+
+
+/* Стили секций с содержанием */
+
+.tabs>section {
+    display: none;
+    padding: 15px;
+    background: #F9F0DA;
+    border: 1px solid #7BA7AB;
+}
+
+.tabs>section>p {
+    margin: 0 0 5px;
+    line-height: 1.5;
+    color: #383838;
+    /* прикрутим анимацию */
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    -webkit-animation-name: fadeIn;
+    animation-name: fadeIn;
+}
+
+
+/* Описываем анимацию свойства opacity */
+
+@-webkit-keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+
+/* Прячем чекбоксы */
+
+.tabs>input {
+    display: none;
+    position: absolute;
+}
+
+
+/* Стили переключателей вкладок (табов) */
+
+.tabs>label {
+    display: inline-block;
+    margin: 0 0 -1px;
+    padding: 15px 25px;
+    font-weight: 600;
+    text-align: center;
+    color: #aaa;
+    border: 0px solid #7BA7AB;
+    border-width: 1px 1px 1px 1px;
+    background: #f1f1f1;
+    border-radius: 3px 3px 0 0;
+}
+
+
+/* Шрифт-иконки от Font Awesome в формате Unicode */
+
+.tabs>label:before {
+    font-family: fontawesome;
+    font-weight: normal;
+    margin-right: 10px;
+}
+
+.tabs>label[for*="1"]:before {
+    content: "\f2bd";
+}
+
+.tabs>label[for*="2"]:before {
+    content: "\f126";
+}
+
+.tabs>label[for*="3"]:before {
+    content: "\f1ea";
+}
+
+.tabs>label[for*="4"]:before {
+    content: "\f0c0";
+}
+
+.tabs>label[for*="5"]:before {
+    content: "\f238";
+}
+
+
+/* Изменения стиля переключателей вкладок при наведении */
+
+.tabs>label:hover {
+    color: #888;
+    cursor: pointer;
+}
+
+
+/* Стили для активной вкладки */
+
+.tabs>input:checked+label {
+    color: #555;
+    border-top: 3px solid #7BA7AB;
+    border-bottom: 1px solid #F9F0DA;
+    background: #F9F0DA;
+}
+
+
+/* Активация секций с помощью псевдокласса :checked */
+
+#tab1:checked~#content-tab1,
+#tab2:checked~#content-tab2,
+#tab3:checked~#content-tab3,
+#tab4:checked~#content-tab4,
+#tab5:checked~#content-tab5 {
+    display: block;
+}
+
+
+/* Убираем текст с переключателей 
+* и оставляем иконки на малых экранах
+*/
+
+@media screen and (max-width: 680px) {
+    .tabs>label {
+        font-size: 0;
+    }
+    .tabs>label:before {
+        margin: 0;
+        font-size: 18px;
+    }
+}
+
+
+/* Изменяем внутренние отступы 
+*  переключателей для малых экранов
+*/
+
+@media screen and (max-width: 400px) {
+    .tabs>label {
+        padding: 15px;
+    }
+}

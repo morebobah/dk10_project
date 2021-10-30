@@ -8,6 +8,7 @@
         {
             "name": "PlatformIO",
             "includePath": [
+                "${workspaceFolder}/**"
                 "D:/Documents/PlatformIO/Projects/dk10_project/include",
                 "D:/Documents/PlatformIO/Projects/dk10_project/src",
                 "C:/Users/Alex/.platformio/packages/framework-arduinoespressif32/libraries/BLE/src",
