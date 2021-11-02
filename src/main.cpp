@@ -1,24 +1,20 @@
+#define M_DEBUG
+
 #include <Arduino.h>
-#include <FreeRTOS.h>
 #include <Wire.h>
 #include <Adafruit_MCP23X17.h>
 #include "Motor.h"
 #include "Sensor.h"
 #include "Weigher.h"
+#include <ArduinoJson.h>
+#include "MHandler.h"
+#include "SD.h"
 
-#define RX 4
-#define TX 5
 
-HardwareSerial Serial485(1);
+Adafruit_MCP23X17 mcp[4];
+File jsonFile;
 
-Adafruit_MCP23X17 mcp1;
-Adafruit_MCP23X17 mcp2;
-Adafruit_MCP23X17 mcp3;
-Adafruit_MCP23X17 mcp4;
 
-Motor m1(&mcp1, 0);
-Sensor s1(&mcp1, 1);
-Weigher w1(&Serial485,1);
 
 void setup() {
   /* Hardware address A3A2A1
@@ -31,12 +27,18 @@ void setup() {
   1 1 0 = 0x26
   1 1 1 = 0x27
   */
-  mcp1.begin_I2C(0x20);
-  mcp2.begin_I2C(0x21);
-  mcp3.begin_I2C(0x22);
-  mcp4.begin_I2C(0x23);
-  Serial485.begin(9600);
+  mcp[0].begin_I2C(0x20);
+  mcp[1].begin_I2C(0x21);
+  mcp[2].begin_I2C(0x22);
+  mcp[3].begin_I2C(0x23);
+  Serial.begin(115200);
+  if(SD.begin(SS)) Serial.println("SD ok");
+  else Serial.println("SD failed");
 
+  jsonFile = SD.open("/MACHINE_STRUCT.json");
+  if(!jsonFile) Serial.println("Don't open file");
+
+  MHandler MH;
 }
 
 void loop() {

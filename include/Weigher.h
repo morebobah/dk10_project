@@ -5,19 +5,23 @@
 #include <ModbusRTU.h>
 
 
-class Weigher {
+class Weigher : public Pin {
   public:
     uint8_t m_adr;
     HardwareSerial *m_serial;
 
-    Weigher(HardwareSerial *serial_, uint8_t adr_){
+    Weigher(HardwareSerial *serial_, uint8_t adr_) : Pin(0,0){
       this->m_adr = adr_;
       this->m_serial = serial_;
       ModbusRTU *mb = new ModbusRTU();
       mb->begin(serial_, adr_);
-    }
-    int get_value();
+      #ifdef M_DEBUG
+        Serial.printf("Weigher Serial %d adress %d\n", 0, adr_);
+      #endif //DEBUG
+    };
+    int get_value(){
+      return 0;
+    };
 };
-
 
 #endif // WEIGHER_H
