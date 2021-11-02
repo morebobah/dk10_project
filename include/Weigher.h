@@ -2,7 +2,7 @@
 #define WEIGHER_H
 
 #include <arduino.h>
-#include <ModbusRTU.h>
+//#include <ModbusRTU.h>
 
 
 class Weigher : public Pin {
@@ -13,10 +13,10 @@ class Weigher : public Pin {
     Weigher(HardwareSerial *serial_, uint8_t adr_) : Pin(0,0){
       this->m_adr = adr_;
       this->m_serial = serial_;
-      ModbusRTU *mb = new ModbusRTU();
-      mb->begin(serial_, adr_);
+      //ModbusRTU *mb = new ModbusRTU();
+      //mb->begin(serial_, adr_);*/
       #ifdef M_DEBUG
-        Serial.printf("Weigher Serial %d adress %d\n", 0, adr_);
+        Serial.printf("Create weigher Serial adress %d\n", adr_);
       #endif //DEBUG
     };
     int get_value(){

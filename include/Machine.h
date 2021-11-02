@@ -19,44 +19,23 @@ class Machine {
     Pin **m_pins_arr;
     
     Machine (int machine_number_){
-      DynamicJsonDocument doc(4096);
-      DeserializationError error = deserializeJson(doc, jsonFile);
-      if (error) {
-        Serial.print(F("deserializeJson() failed: "));
-        Serial.println(error.f_str());
-        return;
-      }
-      JsonArray MACHINE = doc["MACHINE"];
+      this->m_pins_col = 0;
+      this->m_pins_arr = new Pin*[1];
       #ifdef M_DEBUG
-        Serial.printf("Create machine %d \n", machine_number_);
-      #endif //DEBUG
-      Pin *p_;
-      for(JsonObject MACHINE_PINS_item : MACHINE[machine_number_]["PINS"].as<JsonArray>()){
-        String s = MACHINE_PINS_item["PINTYPE"];
-        int pin_ = MACHINE_PINS_item["HWObj"];
-        Adafruit_MCP23X17 *mcp_ = &mcp[pin_];
-        uint8_t adr_ = MACHINE_PINS_item["ADR"];
-        if(s == "M") p_ = new Motor(mcp_, adr_);
-        else if(s == "S") p_ = new Sensor(mcp_, adr_);  
-        else if(s == "W") {
-          p_ = new Weigher(&Serial, adr_);
-        }
-           
-        this->add(p_);
-        delete p_;
-      }
+        Serial.printf("Create machine %d ------------------\n", machine_number_);
+      #endif //M_DEBUG
     };
 
     void add (Pin *pin_){
       m_pins_col ++;
       Pin **temp_arr = new Pin*[this->m_pins_col]; 
-      for(int i = 0; i < this->m_pins_col; i++){
+      for(int i = 0; i < this->m_pins_col - 1; i++){
         temp_arr[i] = m_pins_arr[i];
       }
-      Serial.println("OK2");
       temp_arr[m_pins_col - 1] = pin_;
+      delete [] m_pins_arr;
       m_pins_arr = temp_arr;
-      delete [] temp_arr; 
+      
       
     };
     

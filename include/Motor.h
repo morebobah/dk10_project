@@ -10,7 +10,7 @@ class Motor : public Pin {
       m_pin_type = MOTOR;
       m_mcp->pinMode(m_pin, OUTPUT);
       #ifdef M_DEBUG
-        Serial.printf("Motor mcp %d pin %d\n", 0, pin_);
+        Serial.printf("Create motor pin %d\n", pin_);
       #endif //DEBUG
     }
 };

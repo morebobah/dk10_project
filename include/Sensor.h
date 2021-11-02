@@ -10,7 +10,7 @@ class Sensor : public Pin {
       m_pin_type = SENSOR;
       m_mcp->pinMode(m_pin, INPUT);
       #ifdef M_DEBUG
-        Serial.printf("Sensor mcp %d pin %d\n", 0, pin_);
+        Serial.printf("Create sensor mcp %d pin %d\n", 0, pin_);
       #endif //DEBUG
     }
 };
