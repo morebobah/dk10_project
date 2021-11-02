@@ -16,7 +16,7 @@ class Weigher {
       ModbusRTU *mb = new ModbusRTU();
       mb->begin(serial_, adr_);
     }
-
+    int get_value();
 };
 
 
