@@ -16,13 +16,13 @@ extern Adafruit_MCP23X17 mcp[4];
 class Machine {
   public:
     int m_pins_col;
-    Pin **m_pins_arr;
+    Pin **P;
     
-    Machine (int machine_number_){
+    Machine (){
       this->m_pins_col = 0;
-      this->m_pins_arr = new Pin*[1];
+      P = new Pin*[1];
       #ifdef M_DEBUG
-        Serial.printf("Create machine %d ------------------\n", machine_number_);
+        Serial.printf("Create machine ------------------\n");
       #endif //M_DEBUG
     };
 
@@ -30,11 +30,11 @@ class Machine {
       m_pins_col ++;
       Pin **temp_arr = new Pin*[this->m_pins_col]; 
       for(int i = 0; i < this->m_pins_col - 1; i++){
-        temp_arr[i] = m_pins_arr[i];
+        temp_arr[i] = P[i];
       }
       temp_arr[m_pins_col - 1] = pin_;
-      delete [] m_pins_arr;
-      m_pins_arr = temp_arr;
+      delete [] P;
+      P = temp_arr;
       
       
     };

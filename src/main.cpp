@@ -15,7 +15,6 @@ Adafruit_MCP23X17 mcp[4];
 File jsonFile;
 
 
-
 void setup() {
   /* Hardware address A3A2A1
   0 0 0 = 0x20
@@ -34,13 +33,13 @@ void setup() {
   Serial.begin(115200);
   if(SD.begin(SS)) Serial.println("SD ok");
   else Serial.println("SD failed");
-
-  jsonFile = SD.open("/MACHINE_STRUCT.json");
-  if(!jsonFile) Serial.println("Don't open file");
-
-  MHandler MH;
+  
+  
+  MH.begin();
+  MHandler MH1;
+  MH1.begin();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  
 }
