@@ -1,0 +1,100 @@
+#panel {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    height: calc(100% - 10px);
+    max-width: calc(100%-160px);
+    background-color: rgb(240, 240, 240);
+    border: None;
+    border-radius: 5px;
+    position: relative;
+    align-self: center;
+    margin-left: 10px;
+}
+
+.machine {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 200px;
+    height: 100%;
+    min-height: 200px;
+    background-color: rgb(200, 200, 200);
+    border: 5px solid rgb(240, 240, 240);
+}
+
+.machine:hover {
+    border: 1px solid black;
+}
+
+.machLabel {
+    height: 1.5 em;
+    width: 100%;
+    background-color: rgb(170, 170, 170);
+}
+
+.machIco {
+    margin-top: 25px;
+    margin-left: 50px;
+    margin-right: 50px;
+    margin-bottom: 25px;
+    background-image: url('img/gear.png');
+    border-radius: 5px;
+    width: 100px;
+    height: 100px;
+}
+
+.machIco:hover {
+    border-style: outset;
+}
+
+.M {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    height: 70px;
+    width: 100%;
+    background-color: rgb(190, 190, 190);
+    border: 2px solid rgb(200, 200, 200);
+}
+
+.MIco {
+    height: 50px;
+    width: 50px;
+    background-image: url('img/smotor.png');
+    margin: 10px;
+}
+
+.S {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    height: 70px;
+    width: 100%;
+    background-color: rgb(190, 190, 190);
+    border: 2px solid rgb(200, 200, 200);
+}
+
+.SIco {
+    height: 50px;
+    width: 50px;
+    background-image: url('img/sensor.png');
+    margin: 10px;
+}
+
+.W {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    height: 70px;
+    width: 100%;
+    background-color: rgb(190, 190, 190);
+    border: 2px solid rgb(200, 200, 200);
+}
+
+.WIco {
+    height: 50px;
+    width: 50px;
+    background-image: url('img/weigher.png');
+    margin: 10px;
+}
