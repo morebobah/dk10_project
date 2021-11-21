@@ -519,3 +519,13 @@ HRESULT MachineWindow::PostJsonToWebView(web::json::value jsonObj, ICoreWebView2
 
     return webview->PostWebMessageAsJson(stream.str().c_str());
 }
+
+HRESULT MachineWindow::ConnectionEstablished(Microsoft::WRL::ComPtr<ICoreWebView2> m_contentWebView, web::json::value jsonObj)
+{
+    web::json::value jsonSnd = web::json::value::parse(L"{}");
+    jsonSnd[L"message"] = web::json::value(MG_SOCKET_ESTABLISHED);
+    jsonSnd[L"args"] = jsonObj.at(L"args");
+    PostJsonToWebView(jsonSnd, m_contentWebView.Get());
+    PostJsonToWebView(jsonSnd, m_controlsWebView.Get());
+    return S_OK;
+}

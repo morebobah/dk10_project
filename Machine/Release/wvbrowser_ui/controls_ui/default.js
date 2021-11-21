@@ -83,7 +83,7 @@ const messageHandler = event => {
         case commands.MG_CLOSE_WINDOW:
             closeWindow();
             break;
-        case commands.MG_INIT_SOCKET:
+        case commands.MG_SOCKET_ESTABLISHED:
             document.getElementById('ip-field').setAttribute("disabled", true);
             document.getElementById('port-field').setAttribute("disabled", true);
             break;

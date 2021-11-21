@@ -25,6 +25,7 @@ public:
     HRESULT HandleTabMessageReceived(size_t tabId, ICoreWebView2* webview, ICoreWebView2WebMessageReceivedEventArgs* eventArgs);
     int GetDPIAwareBound(int bound);
     static void CheckFailure(HRESULT hr, LPCWSTR errorMessage);
+    HRESULT ConnectionEstablished(Microsoft::WRL::ComPtr<ICoreWebView2> m_contentWebView, web::json::value jsonObj);
 protected:
     HINSTANCE m_hInst = nullptr;  // Current app instance
     HWND m_hWnd = nullptr;
