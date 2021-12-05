@@ -1,3 +1,192 @@
+.tabs {
+    min-height: 100%;
+    min-width: 100%;
+    padding: 0px;
+    margin: 0 auto;
+    float: left;
+}
+
+.tabs>section {
+    display: none;
+    padding: 15px;
+    border: 1px solid #7BA7AB;
+}
+
+.tabs>section>p {
+    margin: 0 0 5px;
+    line-height: 1.5;
+    color: #383838;
+    /* прикрутим анимацию */
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    -webkit-animation-name: fadeIn;
+    animation-name: fadeIn;
+}
+
+
+/* Описываем анимацию свойства opacity */
+
+@-webkit-keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+
+/* Прячем чекбоксы */
+
+.tabs>input {
+    display: none;
+    position: absolute;
+}
+
+
+/* Стили переключателей вкладок (табов) */
+
+.tabs>label {
+    display: inline-block;
+    margin: 0 0 -1px;
+    padding: 15px 25px;
+    font-weight: 600;
+    text-align: center;
+    color: #aaa;
+    border: 0px solid #7BA7AB;
+    border-width: 1px 1px 1px 1px;
+    background: rgb(245, 245, 245);
+    border-radius: 3px 3px 0 0;
+}
+
+
+/* Шрифт-иконки от Font Awesome в формате Unicode */
+
+.tabs>label:before {
+    font-family: fontawesome;
+    font-weight: normal;
+    margin-right: 10px;
+}
+
+.tabs>label[for*="1"]:before {
+    content: "\f2bd";
+}
+
+.tabs>label[for*="2"]:before {
+    content: "\f126";
+}
+
+.tabs>label[for*="3"]:before {
+    content: "\f1ea";
+}
+
+.tabs>label[for*="4"]:before {
+    content: "\f0c0";
+}
+
+.tabs>label[for*="5"]:before {
+    content: "\f238";
+}
+
+
+/* Изменения стиля переключателей вкладок при наведении */
+
+.tabs>label:hover {
+    color: #888;
+    cursor: pointer;
+}
+
+
+/* Стили для активной вкладки */
+
+.tabs>input:checked+label {
+    color: #555;
+    border-top: 3px solid #7BA7AB;
+    border-bottom: 1px solid rgb(245, 245, 245);
+    background: rgb(245, 245, 245);
+}
+
+
+/* Активация секций с помощью псевдокласса :checked */
+
+#tab1:checked~#content-tab1,
+#tab2:checked~#content-tab2,
+#tab3:checked~#content-tab3,
+#tab4:checked~#content-tab4,
+#tab5:checked~#content-tab5 {
+    display: block;
+}
+
+
+/* Убираем текст с переключателей 
+* и оставляем иконки на малых экранах
+*/
+
+@media screen and (max-width: 680px) {
+    .tabs>label {
+        font-size: 0;
+    }
+    .tabs>label:before {
+        margin: 0;
+        font-size: 18px;
+    }
+}
+
+
+/* Изменяем внутренние отступы 
+*  переключателей для малых экранов
+*/
+
+@media screen and (max-width: 400px) {
+    .tabs>label {
+        padding: 15px;
+    }
+}
+
+.bars {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.barsControls {
+    display: flex;
+    flex-direction: row;
+    min-height: 100%;
+}
+
+.ctrlBTN {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 20px outline;
+    margin: 25px;
+    font-size: large;
+}
+
+#startButton {
+    background-color: lightgreen;
+}
+
+#stopButton {
+    background-color: orangered;
+}
+
+#pauseButton {
+    background-color: slategray;
+}
+
 #panel {
     display: flex;
     flex-direction: row;
@@ -8,19 +197,40 @@
     border: None;
     border-radius: 5px;
     position: relative;
-    align-self: center;
+    /*align-self: center;*/
     margin-left: 10px;
+}
+
+.record {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 300px;
+    min-height: 100%;
+    background-color: white;
+    border: none;
+    box-shadow: 0 0 3px dodgerblue;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.gcode {
+    width: 100%;
+}
+
+.gcode:hover {
+    border: 1px solid black;
 }
 
 .machine {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    width: 200px;
+    width: 300px;
     height: 100%;
     min-height: 200px;
     background-color: rgb(200, 200, 200);
-    border: 5px solid rgb(240, 240, 240);
+    border: 1px solid rgb(240, 240, 240);
 }
 
 .machine:hover {
@@ -45,56 +255,238 @@
 }
 
 .machIco:hover {
-    border-style: outset;
+    border: 1px solid black;
 }
 
 .M {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    height: 70px;
-    width: 100%;
+    height: 40px;
+    width: calc(100% - 4px);
     background-color: rgb(190, 190, 190);
     border: 2px solid rgb(200, 200, 200);
 }
 
-.MIco {
-    height: 50px;
+.MLabel {
+    height: 30px;
     width: 50px;
-    background-image: url('img/smotor.png');
-    margin: 10px;
+    background-color: rgb(170, 170, 170);
+    font-size: 6pt;
+    margin: 5px;
+}
+
+.MIco {
+    height: 30px;
+    width: 30px;
+    background-image: url('img/small_smotor.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    margin: 5px;
+}
+
+.MCtrl {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_start.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 2px;
+}
+
+.MSCtrl {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_pause.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 2px;
+}
+
+.MTCtrl {
+    height: 35px;
+    width: 35px;
+}
+
+.MCtrl:hover,
+.MSCtrl:hover,
+.MTCtrl:hover {
+    background-color: rgb(170, 170, 170);
+}
+
+input.M[type=checkbox] {
+    display: none;
+}
+
+span.M {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_timer.png');
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+span.M:hover {
+    background-color: rgb(170, 170, 170);
+}
+
+input.M[type=checkbox]:checked+.M {
+    background-image: url('img/small_timer_checked.png');
+}
+
+.MData {
+    height: 30px;
+    width: 100px;
+    background-color: rgb(170, 170, 170);
+    font-size: 6pt;
+    margin: 5px;
+}
+
+.Minput {
+    height: 10px;
+    width: calc(100% - 5px);
+    border: 0px none;
+    font-size: 6pt;
+    margin: 2px;
+}
+
+.Minput:focus {
+    outline: none;
+    box-shadow: 0 0 3px dodgerblue;
 }
 
 .S {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    height: 70px;
-    width: 100%;
+    height: 40px;
+    width: calc(100% - 4px);
     background-color: rgb(190, 190, 190);
     border: 2px solid rgb(200, 200, 200);
 }
 
-.SIco {
-    height: 50px;
+.SLabel {
+    height: 30px;
     width: 50px;
-    background-image: url('img/sensor.png');
-    margin: 10px;
+    background-color: rgb(170, 170, 170);
+    font-size: 6pt;
+    margin: 5px;
+}
+
+.SIco {
+    height: 30px;
+    width: 30px;
+    background-image: url('img/small_sensor.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    margin: 5px;
+}
+
+.SCtrl {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_update.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 2px;
+}
+
+.SCtrl:hover {
+    background-color: rgb(170, 170, 170);
 }
 
 .W {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    height: 70px;
-    width: 100%;
+    height: 40px;
+    width: calc(100% - 4px);
     background-color: rgb(190, 190, 190);
     border: 2px solid rgb(200, 200, 200);
 }
 
-.WIco {
-    height: 50px;
+.WLabel {
+    height: 30px;
     width: 50px;
-    background-image: url('img/weigher.png');
-    margin: 10px;
+    background-color: rgb(170, 170, 170);
+    font-size: 6pt;
+    margin: 5px;
+}
+
+.WIco {
+    height: 30px;
+    width: 30px;
+    background-image: url('img/small_weigher.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    margin: 5px;
+}
+
+.WCtrl {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_start.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 2px;
+}
+
+.WCtrl:hover {
+    background-color: rgb(170, 170, 170);
+}
+
+.WUpd {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_update.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 2px;
+}
+
+.WUpd:hover {
+    background-color: rgb(170, 170, 170);
+}
+
+.WData {
+    height: 30px;
+    width: 100px;
+    background-color: rgb(170, 170, 170);
+    font-size: 6pt;
+    margin: 5px;
+}
+
+.Winput {
+    height: 10px;
+    width: calc(100% - 5px);
+    border: 0px none;
+    font-size: 6pt;
+    margin: 2px;
+}
+
+.Winput:focus {
+    outline: none;
+    box-shadow: 0 0 3px dodgerblue;
+}
+
+.styled-select select {
+    background: transparent;
+    width: 100%;
+    padding: 5px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    height: 34px;
+}
+
+.styled-select {
+    width: 100%;
+    height: 34px;
+    overflow: hidden;
+    /*background: url('img/selarr.png') no-repeat right #ddd;*/
 }

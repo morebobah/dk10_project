@@ -4,6 +4,7 @@ let requestedTop = 0;
 let lastRequestSize = 0;
 let itemHeight = 48;
 var socket = null;
+var ipAddr = null;
 
 /*
 
@@ -268,14 +269,18 @@ function clearHistory() {
 
 const messageHandler = event => {
     var message = event.data.message;
-    var args = event.data.args;
+    ipAddr = event.data.args.ipAddr;
 
     switch (message) {
         case commands.MG_INIT_SOCKET:
-            console.log(args.ipAddr);
-            socket = new WebSocket(args.ipAddr);
+            console.log(ipAddr);
+            socket = new WebSocket(ipAddr);
             socket.onopen = function() {
-                socket.send("Загрузочка");
+                var message = {
+                    message: commands.MG_SOCKET_ESTABLISHED,
+                    args: {}
+                };
+                window.chrome.webview.postMessage(message);
             };
             socket.onclose = function(event) {
                 if (event.wasClean) {
@@ -289,10 +294,70 @@ const messageHandler = event => {
                 refreshPanel(event.data);
             };
             break;
+        case commands.MG_SOCKET_ESTABLISHED:
+            if (socket) {
+                if (socket.readyState == 1) {
+                    socket.send("getms");
+                } else {
+                    socket = new WebSocket(ipAddr);
+                }
+            }
+            break;
         default:
             console.log(`Unexpected message: ${JSON.stringify(event.data)}`);
             break;
     }
+}
+
+function refreshAuto() {
+    let ctrlBar = document.createElement('div');
+    ctrlBar.id = 'apanel';
+    ctrlBar.className = 'barsControls';
+
+    let startBtn = document.createElement('input');
+    startBtn.id = 'startButton';
+    startBtn.type = 'button';
+    startBtn.value = 'Старт';
+    startBtn.className = 'ctrlBTN';
+    ctrlBar.append(startBtn);
+
+    let stopBtn = document.createElement('input');
+    stopBtn.id = 'stopButton';
+    stopBtn.type = 'button';
+    stopBtn.value = 'Стоп';
+    stopBtn.className = 'ctrlBTN';
+    ctrlBar.append(stopBtn);
+
+    let pauseBtn = document.createElement('input');
+    pauseBtn.id = 'pauseButton';
+    pauseBtn.type = 'button';
+    pauseBtn.value = 'Пауза';
+    pauseBtn.className = 'ctrlBTN';
+    ctrlBar.append(pauseBtn);
+
+    let AutoPrg = document.createElement('div');
+    AutoPrg.id = 'prgSelDiv';
+    AutoPrg.className = 'styled-select';
+    let AutoPrgSelector = document.createElement('select');
+    AutoPrgSelector.id = 'prgSel';
+    let AutoPrgOpts = document.createElement('option');
+    AutoPrgOpts.id = 'prgOpt';
+    AutoPrgOpts.innerHTML = 'sjkjhnkdj';
+    AutoPrgSelector.append(AutoPrgOpts);
+    AutoPrg.append(AutoPrgSelector);
+
+    let mainBar = document.getElementById('autoBar');
+    mainBar.append(ctrlBar);
+    mainBar.append(AutoPrg);
+}
+
+function refreshRecord() {
+    let mainBar = document.getElementById('handBar');
+    let recordsBar = document.createElement('div');
+    recordsBar.className = 'record';
+    recordsBar.id = 'recordsBar';
+    mainBar.append(recordsBar);
+
 }
 
 function refreshPanel(data) {
@@ -321,37 +386,117 @@ function refreshPanel(data) {
         let icoControl = document.createElement('div');
         icoControl.className = 'machIco';
         icoControl.id = 'ico' + key;
-        machineControl.append(icoControl);
+        //machineControl.append(icoControl);
         Object.keys(val).forEach(function(k) {
             if (k == "PINS") {
-                refreshPins(machineControl, val[k])
+                refreshPins(machineControl, val[k], key)
             }
         });
         ctrlBar.append(machineControl);
         //alert(Object.keys(val));
     });
-    let bodyElement = document.getElementsByTagName('body')[0];
-    bodyElement.append(ctrlBar);
+    //let bodyElement = document.getElementsByTagName('body')[0];
+    //bodyElement.append(ctrlBar);
+    let mainBar = document.getElementById('handBar');
+    mainBar.append(ctrlBar);
 }
 
-function refreshPins(ctrlBar, objJSON) {
+function refreshPins(ctrlBar, objJSON, machine = 0) {
     var keys = Object.keys(objJSON);
-    keys.forEach(function(key) {
+    keys.forEach(function(key, pinum) {
         let pinControl = document.createElement('div');
         pinControl.className = objJSON[key]["PINTYPE"];
         pinControl.id = 'pin[' + objJSON[key]["ADR"] + ']';
         let icoPin = document.createElement('div');
         icoPin.className = objJSON[key]["PINTYPE"] + "Ico";
+        let Label = document.createElement('div');
+        Label.className = objJSON[key]["PINTYPE"] + "Label";
+        Label.innerHTML = 'ADR:&nbsp;' + objJSON[key]["ADR"] + '<br>HWObj:&nbsp;' + objJSON[key]["HWObj"];
+        let startCtrl = document.createElement('div');
+        startCtrl.className = objJSON[key]["PINTYPE"] + "Ctrl";
         pinControl.append(icoPin);
+        pinControl.append(Label);
+        pinControl.append(startCtrl);
+
+        startCtrl.addEventListener('click', function(e) {
+            var gcode = 'G' + machine + objJSON[key]["PINTYPE"];
+            if (pinum < 10) {
+                gcode += '0';
+            }
+            gcode += pinum + 'V';
+            let recordBar = document.getElementById('recordsBar');
+            let gRec = document.createElement('div');
+            gRec.className = 'gcode';
+            if (objJSON[key]["PINTYPE"] == 'W') {
+                let wei = document.getElementById('W' + machine + objJSON[key]["PINTYPE"]);
+                if (wei) {
+                    gcode += wei.value;
+                }
+            } else {
+                gcode += '1';
+            }
+            gRec.innerHTML = gcode;
+            recordBar.append(gRec);
+            /*
+            var key = e.which || e.keyCode;
+            if (key === 13) { // 13 is enter
+                e.preventDefault();
+                processAddressBarInput();
+            }
+            */
+        });
+
+        if (objJSON[key]["PINTYPE"] == 'M') {
+            let stopCtrl = document.createElement('div');
+            stopCtrl.className = objJSON[key]["PINTYPE"] + "SCtrl";
+            pinControl.append(stopCtrl);
+            let timerCtrl = document.createElement('label');
+            timerCtrl.className = objJSON[key]["PINTYPE"] + "TCtrl";
+            timerCtrl.innerHTML = '<input class="M" type="checkbox"><span class="M"></span>';
+            pinControl.append(timerCtrl);
+            let shildData = document.createElement('div');
+            shildData.className = objJSON[key]["PINTYPE"] + "Data";
+            let inputData = document.createElement('input');
+            inputData.className = objJSON[key]["PINTYPE"] + "input";
+            inputData.id = 'M' + machine + objJSON[key]["PINTYPE"];
+            inputData.value = 0;
+            shildData.append(inputData);
+            pinControl.append(shildData);
+        }
+
+
+        if (objJSON[key]["PINTYPE"] == 'W') {
+            let icoUpd = document.createElement('div');
+            icoUpd.className = objJSON[key]["PINTYPE"] + "Upd";
+            let shildData = document.createElement('div');
+            shildData.className = objJSON[key]["PINTYPE"] + "Data";
+            shildData.innerHTML = 'Вес: 0 кг<br>';
+            let inputData = document.createElement('input');
+            inputData.className = objJSON[key]["PINTYPE"] + "input";
+            inputData.id = 'W' + machine + objJSON[key]["PINTYPE"];
+            inputData.value = 0;
+            shildData.append(inputData);
+            pinControl.append(icoUpd);
+            pinControl.append(shildData);
+        }
         ctrlBar.append(pinControl);
     });
 
 }
 
 function initSocket() {
+    alert('a');
     socket = new WebSocket("ws://127.0.0.1:27015");
     socket.onopen = function() {
         socket.send("Загрузочка");
+        var message = {
+            message: commands.MG_SOCKET_ESTABLISHED,
+            args: {}
+        };
+
+
+        window.chrome.webview.postMessage(message);
+
     };
     socket.onclose = function(event) {
         if (event.wasClean) {
@@ -383,6 +528,10 @@ function initSocket() {
         });
         */
     };
+
+    if (socket.OPEN) {
+        alert('a');
+    }
 }
 
 
@@ -398,6 +547,8 @@ function addControlsListeners() {}
 
 
 function init() {
+    refreshAuto();
+    refreshRecord();
     window.chrome.webview.addEventListener('message', messageHandler);
     addControlsListeners();
     /*
