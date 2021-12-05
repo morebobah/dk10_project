@@ -43,9 +43,9 @@ HRESULT Tab::Init(ICoreWebView2Environment* env, bool shouldBeActive)
         }).Get(), &m_uriUpdateForwarderToken));
 
         // Enable listening for security events to update secure icon
-        RETURN_IF_FAILED(m_contentWebView->CallDevToolsProtocolMethod(L"Security.enable", L"{}", nullptr));
+        //RETURN_IF_FAILED(m_contentWebView->CallDevToolsProtocolMethod(L"Security.enable", L"{}", nullptr));
 
-        MachineWindow::CheckFailure(m_contentWebView->GetDevToolsProtocolEventReceiver(L"Security.securityStateChanged", &m_securityStateChangedReceiver), L"");
+        //MachineWindow::CheckFailure(m_contentWebView->GetDevToolsProtocolEventReceiver(L"Security.securityStateChanged", &m_securityStateChangedReceiver), L"");
 
         std::wstring controlsPath = machineWindow->GetFullPathFor(L"wvbrowser_ui\\content_ui\\main.html");
         RETURN_IF_FAILED(m_contentWebView->Navigate(controlsPath.c_str()));
@@ -62,6 +62,39 @@ void Tab::SetMessageBroker()
     {
         MachineWindow* machineWindow = reinterpret_cast<MachineWindow*>(GetWindowLongPtr(m_parentHWnd, GWLP_USERDATA));
         MachineWindow::CheckFailure(machineWindow->HandleTabMessageReceived(m_tabId, webview, eventArgs), L"");
+        wil::unique_cotaskmem_string jsonString;
+        MachineWindow::CheckFailure(eventArgs->get_WebMessageAsJson(&jsonString), L"");  // Get the message from the UI WebView as JSON formatted string
+        web::json::value jsonObj = web::json::value::parse(jsonString.get());
+
+        if (!jsonObj.has_field(L"message"))
+        {
+            OutputDebugString(L"No message code provided\n");
+            return S_OK;
+        }
+
+        if (!jsonObj.has_field(L"args"))
+        {
+            OutputDebugString(L"The message has no args field\n");
+            return S_OK;
+        }
+
+        int message = jsonObj.at(L"message").as_integer();
+        web::json::value args = jsonObj.at(L"args");
+
+        switch (message) {
+        case MG_SOCKET_ESTABLISHED:
+        {
+            machineWindow->ConnectionEstablished(m_contentWebView, jsonObj);
+            //MessageBox(NULL, L"Connection established", L"Socket", MB_OK);
+            //m_contentWebView->ExecuteScript(L"initSocket()", m_uiScriptExecutor.Get());
+        }
+        break;
+        default:
+        {
+            OutputDebugString(L"Unexpected message\n");
+        }
+        break;
+        }
 
         return S_OK;
     });

@@ -353,10 +353,16 @@ function refreshAuto() {
 
 function refreshRecord() {
     let mainBar = document.getElementById('handBar');
+<<<<<<< HEAD
     let recordsBar = document.createElement('div');
     recordsBar.className = 'record';
     recordsBar.id = 'recordsBar';
     mainBar.append(recordsBar);
+=======
+    let recordBar = document.createElement('div');
+    recordBar.className = 'record';
+    mainBar.append(recordBar);
+>>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
 
 }
 
@@ -412,6 +418,7 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
         let Label = document.createElement('div');
         Label.className = objJSON[key]["PINTYPE"] + "Label";
         Label.innerHTML = 'ADR:&nbsp;' + objJSON[key]["ADR"] + '<br>HWObj:&nbsp;' + objJSON[key]["HWObj"];
+<<<<<<< HEAD
         let startCtrl = document.createElement('div');
         startCtrl.className = objJSON[key]["PINTYPE"] + "Ctrl";
         pinControl.append(icoPin);
@@ -465,6 +472,13 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
         }
 
 
+=======
+        let icoCtrl = document.createElement('div');
+        icoCtrl.className = objJSON[key]["PINTYPE"] + "Ctrl";
+        pinControl.append(icoPin);
+        pinControl.append(Label);
+        pinControl.append(icoCtrl);
+>>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
         if (objJSON[key]["PINTYPE"] == 'W') {
             let icoUpd = document.createElement('div');
             icoUpd.className = objJSON[key]["PINTYPE"] + "Upd";
@@ -473,7 +487,10 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
             shildData.innerHTML = 'Вес: 0 кг<br>';
             let inputData = document.createElement('input');
             inputData.className = objJSON[key]["PINTYPE"] + "input";
+<<<<<<< HEAD
             inputData.id = 'W' + machine + objJSON[key]["PINTYPE"];
+=======
+>>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
             inputData.value = 0;
             shildData.append(inputData);
             pinControl.append(icoUpd);

@@ -214,6 +214,7 @@
     overflow-x: hidden;
 }
 
+<<<<<<< HEAD
 .gcode {
     width: 100%;
 }
@@ -222,6 +223,8 @@
     border: 1px solid black;
 }
 
+=======
+>>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
 .machine {
     display: flex;
     flex-direction: column;
@@ -295,6 +298,7 @@
     margin: 2px;
 }
 
+<<<<<<< HEAD
 .MSCtrl {
     height: 35px;
     width: 35px;
@@ -356,6 +360,10 @@ input.M[type=checkbox]:checked+.M {
 .Minput:focus {
     outline: none;
     box-shadow: 0 0 3px dodgerblue;
+=======
+.MCtrl:hover {
+    background-color: rgb(170, 170, 170);
+>>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
 }
 
 .S {
@@ -389,7 +397,11 @@ input.M[type=checkbox]:checked+.M {
     height: 35px;
     width: 35px;
     border-radius: 5px;
+<<<<<<< HEAD
     background-image: url('img/small_update.png');
+=======
+    background-image: url('img/small_start.png');
+>>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
     background-position: center;
     background-repeat: no-repeat;
     margin: 2px;

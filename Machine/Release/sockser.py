@@ -8,7 +8,10 @@ async def handler(websocket, path):
     print(reply)
     print("Введите путь до файла или сообщение >>")
     #xt = input()
-    xt = "m"
+    if data=='getms':
+        xt = "m"
+    else:
+        xt = 'unknown command'
     try:
         file = open(xt)
     except IOError as e:
