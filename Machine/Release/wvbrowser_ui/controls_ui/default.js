@@ -212,7 +212,7 @@ function refreshControls() {
     ipInput.id = 'ip-field';
     ipInput.placeholder = 'IP address';
     ipInput.type = 'text';
-    ipInput.value = '127.0.0.1';
+    ipInput.value = '192.168.0.22';
     ipInput.spellcheck = false;
     addressBar.append(ipInput);
 
@@ -220,7 +220,7 @@ function refreshControls() {
     portInput.id = 'port-field';
     portInput.placeholder = 'Port number';
     portInput.type = 'text';
-    portInput.value = '27015';
+    portInput.value = '81';
     portInput.spellcheck = false;
     addressBar.append(portInput);
 
