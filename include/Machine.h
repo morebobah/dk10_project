@@ -28,12 +28,12 @@ class Machine {
 
     void add (Pin *pin_){
       m_pins_col ++;
-      Pin **temp_arr = new Pin*[this->m_pins_col]; 
-      for(int i = 0; i < this->m_pins_col - 1; i++){
+      Pin **temp_arr = new Pin*[this->m_pins_col]; // создаем новый массив указателей на Pin
+      for(int i = 0; i < this->m_pins_col - 1; i++){ //переносим данные
         temp_arr[i] = P[i];
       }
-      temp_arr[m_pins_col - 1] = pin_;
-      delete [] P;
+      temp_arr[m_pins_col - 1] = pin_; //новые данные добавляем в новую ячейку
+      delete [] P; // освобождаем память от старого массива
       P = temp_arr;
       
       

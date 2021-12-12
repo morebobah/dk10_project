@@ -9,11 +9,12 @@
 #include <ArduinoJson.h>
 #include "MHandler.h"
 #include "SD.h"
+#include <SoftwareSerial.h>
 
 
 Adafruit_MCP23X17 mcp[4];
-File jsonFile;
-
+//File jsonFile;
+SoftwareSerial SWSerial;
 
 void setup() {
   /* Hardware address A3A2A1
@@ -30,16 +31,28 @@ void setup() {
   mcp[1].begin_I2C(0x21);
   mcp[2].begin_I2C(0x22);
   mcp[3].begin_I2C(0x23);
-  Serial.begin(115200);
+  pinMode(9, INPUT);
+  Serial.begin(9600);
+  Serial.println();
+  Serial.println("Serial begin");
+  SWSerial.begin(9600,SWSERIAL_8N1, D3, D4);
+  Serial.println("SWSerial begin");
+  Serial.setTimeout(50);
+  SWSerial.setTimeout(50);
   if(SD.begin(SS)) Serial.println("SD ok");
   else Serial.println("SD failed");
   
   
   MH.begin();
-  MHandler MH1;
-  MH1.begin();
+  
 }
 
 void loop() {
   
+  Weigher* w = (Weigher*)MH.M[0]->P[5];
+  //Serial.println((int)w->getV());
+  w->getV();
+  Serial.println(millis());
+  delay(10);
+ 
 }

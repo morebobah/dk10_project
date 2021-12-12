@@ -4,8 +4,6 @@
 #include <arduino.h>
 #include <Adafruit_MCP23X17.h>
 
-
-
 enum PINTYPES{
   MOTOR, 
   SENSOR,
@@ -33,7 +31,7 @@ class Pin {
       return this->m_pin_type;
     };
     void set_state(uint8_t state_){
-      this->m_mcp->digitalWrite(m_pin, state_);
+      this->m_mcp->digitalWrite(this->m_pin, state_);
     };
 
 

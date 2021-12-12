@@ -9,10 +9,12 @@
 #include "ArduinoJson.h"
 #include "SD.h"
 #include "Machine.h"
+#include "SoftwareSerial.h"
 
 extern HardwareSerial Serial;
 extern Adafruit_MCP23X17 mcp[4];
-extern File jsonFile;
+//extern File jsonFile;
+extern SoftwareSerial SWSerial;
 
 class MHandler {
   public:
@@ -24,7 +26,7 @@ class MHandler {
       M = new Machine*[1];
     };
     void begin(){
-      jsonFile = SD.open("/MACHINE_STRUCT.json");
+      File jsonFile = SD.open("/MACHINE_STRUCT.json");
       if(!jsonFile) Serial.println("Don't open file");
       DynamicJsonDocument doc(4096);
       DeserializationError error = deserializeJson(doc, jsonFile);
@@ -44,7 +46,7 @@ class MHandler {
           if(s == "M") M[i]->add(new Motor(mcp_, adr_));
           else if(s == "S") M[i]->add(new Sensor(mcp_, adr_));  
           else if(s == "W") {
-            M[i]->add(new Weigher(&Serial, adr_));
+            M[i]->add(new Weigher((HardwareSerial*)&SWSerial, adr_));
           }
         }
       }
