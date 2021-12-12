@@ -5,6 +5,9 @@ let lastRequestSize = 0;
 let itemHeight = 48;
 var socket = null;
 var ipAddr = null;
+var gcode = '';
+var bDirect = true;
+var sended = ' sended';
 
 /*
 
@@ -269,10 +272,10 @@ function clearHistory() {
 
 const messageHandler = event => {
     var message = event.data.message;
-    ipAddr = event.data.args.ipAddr;
 
     switch (message) {
         case commands.MG_INIT_SOCKET:
+            ipAddr = event.data.args.ipAddr;
             console.log(ipAddr);
             socket = new WebSocket(ipAddr);
             socket.onopen = function() {
@@ -295,13 +298,14 @@ const messageHandler = event => {
             };
             break;
         case commands.MG_SOCKET_ESTABLISHED:
-            if (socket) {
-                if (socket.readyState == 1) {
-                    socket.send("getms");
-                } else {
-                    socket = new WebSocket(ipAddr);
-                }
-            }
+            sendText("getms");
+
+            break;
+        case commands.MG_DIRECT_SWITCHER:
+            bDirect = !bDirect;
+            break;
+        case commands.MG_CLEAR_LIST:
+            clearlist();
             break;
         default:
             console.log(`Unexpected message: ${JSON.stringify(event.data)}`);
@@ -353,16 +357,10 @@ function refreshAuto() {
 
 function refreshRecord() {
     let mainBar = document.getElementById('handBar');
-<<<<<<< HEAD
     let recordsBar = document.createElement('div');
     recordsBar.className = 'record';
     recordsBar.id = 'recordsBar';
     mainBar.append(recordsBar);
-=======
-    let recordBar = document.createElement('div');
-    recordBar.className = 'record';
-    mainBar.append(recordBar);
->>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
 
 }
 
@@ -408,6 +406,36 @@ function refreshPanel(data) {
 }
 
 function refreshPins(ctrlBar, objJSON, machine = 0) {
+    //create timer pin
+    let pinControl = document.createElement('div');
+    pinControl.className = 'T';
+    pinControl.id = 'Timer' + machine;
+    let icoPin = document.createElement('div');
+    icoPin.className = "TIco";
+    icoPin.id = 'TIco' + machine;
+    let startCtrl = document.createElement('div');
+    startCtrl.className = "TCtrl";
+    startCtrl.addEventListener('click', function(e) {
+        let ico = document.getElementById('TIco' + machine);
+        let tinput = document.getElementById('T' + machine);
+        if (tinput) {
+            gcode = 'G' + machine + 'T' + tinput.value;
+        }
+    });
+    let inputData = document.createElement('input');
+    inputData.className = "Tinput";
+    inputData.id = 'T' + machine;
+    inputData.value = 1;
+    let shildData = document.createElement('div');
+    shildData.className = "TData";
+    shildData.innerHTML = 'Время задержки в секундах<br>';
+    shildData.append(inputData);
+    pinControl.append(icoPin);
+    pinControl.append(startCtrl);
+    pinControl.append(shildData);
+    ctrlBar.append(pinControl);
+    //timer pin created
+
     var keys = Object.keys(objJSON);
     keys.forEach(function(key, pinum) {
         let pinControl = document.createElement('div');
@@ -418,7 +446,6 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
         let Label = document.createElement('div');
         Label.className = objJSON[key]["PINTYPE"] + "Label";
         Label.innerHTML = 'ADR:&nbsp;' + objJSON[key]["ADR"] + '<br>HWObj:&nbsp;' + objJSON[key]["HWObj"];
-<<<<<<< HEAD
         let startCtrl = document.createElement('div');
         startCtrl.className = objJSON[key]["PINTYPE"] + "Ctrl";
         pinControl.append(icoPin);
@@ -426,7 +453,15 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
         pinControl.append(startCtrl);
 
         startCtrl.addEventListener('click', function(e) {
-            var gcode = 'G' + machine + objJSON[key]["PINTYPE"];
+            if (gcode.length > 0) {
+                gcode += '+' + objJSON[key]["PINTYPE"];
+            } else {
+                gcode = 'G' + machine + objJSON[key]["PINTYPE"];
+            }
+            /*
+            var checkbox = document.getElementById('T' + machine + objJSON[key]["ADR"]);
+            var timebox = document.getElementById('Sec' + machine + objJSON[key]["ADR"]);
+            */
             if (pinum < 10) {
                 gcode += '0';
             }
@@ -439,12 +474,22 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
                 if (wei) {
                     gcode += wei.value;
                 }
+            } else if (objJSON[key]["PINTYPE"] == 'S') {
+                gcode += '1';
             } else {
                 gcode += '1';
+                if (bDirect) {
+                    gRec.innerHTML = sendgcode(gcode);
+                } else {
+                    gRec.innerHTML = gcode;
+                }
+                gcode = '';
+                recordBar.append(gRec);
             }
-            gRec.innerHTML = gcode;
-            recordBar.append(gRec);
             /*
+            if (checkbox.checked) {
+                gcode += '+T' + timebox.value;
+            }
             var key = e.which || e.keyCode;
             if (key === 13) { // 13 is enter
                 e.preventDefault();
@@ -459,26 +504,41 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
             pinControl.append(stopCtrl);
             let timerCtrl = document.createElement('label');
             timerCtrl.className = objJSON[key]["PINTYPE"] + "TCtrl";
-            timerCtrl.innerHTML = '<input class="M" type="checkbox"><span class="M"></span>';
-            pinControl.append(timerCtrl);
+            timerCtrl.innerHTML = '<input class="M" type="checkbox" id="T' + machine + objJSON[key]["ADR"] + '"><span class="M"></span>';
             let shildData = document.createElement('div');
             shildData.className = objJSON[key]["PINTYPE"] + "Data";
             let inputData = document.createElement('input');
             inputData.className = objJSON[key]["PINTYPE"] + "input";
-            inputData.id = 'M' + machine + objJSON[key]["PINTYPE"];
-            inputData.value = 0;
+            inputData.id = 'Sec' + machine + objJSON[key]["ADR"];
+            inputData.value = 1;
             shildData.append(inputData);
-            pinControl.append(shildData);
+            //pinControl.append(timerCtrl); //add if nessesary timer control
+            //pinControl.append(shildData);//add if nessesary timer control
+
+            stopCtrl.addEventListener('click', function(e) {
+                if (gcode.length > 0) {
+                    gcode += '+' + machine + objJSON[key]["PINTYPE"];
+                } else {
+                    gcode = 'G' + machine + objJSON[key]["PINTYPE"];
+                }
+                if (pinum < 10) {
+                    gcode += '0';
+                }
+                gcode += pinum + 'V0';
+                let recordBar = document.getElementById('recordsBar');
+                let gRec = document.createElement('div');
+                gRec.className = 'gcode';
+                if (bDirect) {
+                    gRec.innerHTML = sendgcode(gcode);
+                } else {
+                    gRec.innerHTML = gcode;
+                }
+                gcode = '';
+                recordBar.append(gRec);
+            });
         }
 
 
-=======
-        let icoCtrl = document.createElement('div');
-        icoCtrl.className = objJSON[key]["PINTYPE"] + "Ctrl";
-        pinControl.append(icoPin);
-        pinControl.append(Label);
-        pinControl.append(icoCtrl);
->>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
         if (objJSON[key]["PINTYPE"] == 'W') {
             let icoUpd = document.createElement('div');
             icoUpd.className = objJSON[key]["PINTYPE"] + "Upd";
@@ -487,84 +547,88 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
             shildData.innerHTML = 'Вес: 0 кг<br>';
             let inputData = document.createElement('input');
             inputData.className = objJSON[key]["PINTYPE"] + "input";
-<<<<<<< HEAD
             inputData.id = 'W' + machine + objJSON[key]["PINTYPE"];
-=======
->>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
-            inputData.value = 0;
+            inputData.value = 3;
             shildData.append(inputData);
             pinControl.append(icoUpd);
             pinControl.append(shildData);
+            icoUpd.addEventListener('click', function(e) {
+                let gcode = 'G' + machine + objJSON[key]["PINTYPE"];
+                if (pinum < 10) {
+                    gcode += '0';
+                }
+                gcode += pinum + 'V0';
+                let recordBar = document.getElementById('recordsBar');
+                let gRec = document.createElement('div');
+                gRec.className = 'gcode';
+                gRec.innerHTML = sendgcode(gcode);
+                recordBar.append(gRec);
+            });
         }
+
+        if (objJSON[key]["PINTYPE"] == 'S') {
+            let icoUpd = document.createElement('div');
+            icoUpd.className = objJSON[key]["PINTYPE"] + "Upd";
+            pinControl.append(icoUpd);
+            icoUpd.addEventListener('click', function(e) {
+                let gcode = 'G' + machine + objJSON[key]["PINTYPE"];
+                if (pinum < 10) {
+                    gcode += '0';
+                }
+                gcode += pinum + 'V0';
+                let recordBar = document.getElementById('recordsBar');
+                let gRec = document.createElement('div');
+                gRec.className = 'gcode';
+                gRec.innerHTML = sendgcode(gcode);
+                recordBar.append(gRec);
+            });
+        }
+
         ctrlBar.append(pinControl);
     });
-
 }
 
 function initSocket() {
-    alert('a');
-    socket = new WebSocket("ws://127.0.0.1:27015");
-    socket.onopen = function() {
-        socket.send("Загрузочка");
-        var message = {
-            message: commands.MG_SOCKET_ESTABLISHED,
-            args: {}
-        };
+    /*тестовая функция для вызова из C++*/
+}
 
-
-        window.chrome.webview.postMessage(message);
-
-    };
-    socket.onclose = function(event) {
-        if (event.wasClean) {
-            alert('Соединение закрыто чисто');
-        } else {
-            alert('Обрыв соединения'); // например, "убит" процесс сервера
-        }
-        alert('Код: ' + event.code + ' причина: ' + event.reason);
-    };
-    socket.onmessage = function(event) {
-        var obj = $.parseJSON(event.data);
-        alert(Object.keys(obj)[0]);
-        refreshPanel(event.data);
-        /*
-        alert(JSON.stringify(obj));
-        for (i = 0; i < obj.length; i++) {
-            var numbers = obj[i];
-            alert(obj[i]);
-            for (j = 0; j < numbers.length; j++) {
-                alert(numbers[j]);
-            }
-
-        }
-        $.each(obj["MACHINE"], function(key, val) {
-            $.each(val["PINS"], function(sk, sv) {
-                alert('sub ' + sk + ' ' + sv);
-            })
-            alert(key + ' NUMBER' + val["NUMBER"] + ' PINS' + val["PINS"]);
+function sendgcode(code = '') {
+    if (code.length == 0) {
+        var gcodes = Array.from(document.getElementsByClassName("gcode"));
+        gcodes.forEach(div => {
+            divin = div.innerHTML.replace(sended, '');
+            code += divin;
+            div.innerHTML = divin + sended;
         });
-        */
-    };
-
-    if (socket.OPEN) {
-        alert('a');
     }
+    sendText(code)
+    return code;
 }
 
 
-function sendText() {
-    if (socket.readyState == 1) {
-        socket.send("Текстовочка");
-    } else {
-        alert(socket.readyState);
+function sendText(txt = "Текстовочка") {
+    if (socket) {
+        if (socket.readyState != 1) {
+            socket = new WebSocket(ipAddr);
+            socket.onopen = function() {
+                socket.send(txt);
+            };
+        } else {
+            socket.send(txt);
+        }
     }
+}
+
+function clearlist() {
+    document.getElementById('recordsBar').innerHTML = "";
 }
 
 function addControlsListeners() {}
 
 
 function init() {
-    refreshAuto();
+    bDirect = false;
+    //refreshAuto();
     refreshRecord();
     window.chrome.webview.addEventListener('message', messageHandler);
     addControlsListeners();

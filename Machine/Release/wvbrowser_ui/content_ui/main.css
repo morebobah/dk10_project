@@ -214,7 +214,6 @@
     overflow-x: hidden;
 }
 
-<<<<<<< HEAD
 .gcode {
     width: 100%;
 }
@@ -223,8 +222,6 @@
     border: 1px solid black;
 }
 
-=======
->>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
 .machine {
     display: flex;
     flex-direction: column;
@@ -298,7 +295,6 @@
     margin: 2px;
 }
 
-<<<<<<< HEAD
 .MSCtrl {
     height: 35px;
     width: 35px;
@@ -360,10 +356,6 @@ input.M[type=checkbox]:checked+.M {
 .Minput:focus {
     outline: none;
     box-shadow: 0 0 3px dodgerblue;
-=======
-.MCtrl:hover {
-    background-color: rgb(170, 170, 170);
->>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
 }
 
 .S {
@@ -397,17 +389,27 @@ input.M[type=checkbox]:checked+.M {
     height: 35px;
     width: 35px;
     border-radius: 5px;
-<<<<<<< HEAD
-    background-image: url('img/small_update.png');
-=======
     background-image: url('img/small_start.png');
->>>>>>> d7d35af8e0fb6c320850378f9a29f4cc1576315c
     background-position: center;
     background-repeat: no-repeat;
     margin: 2px;
 }
 
 .SCtrl:hover {
+    background-color: rgb(170, 170, 170);
+}
+
+.SUpd {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_update.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 2px;
+}
+
+.SUpd:hover {
     background-color: rgb(170, 170, 170);
 }
 
@@ -501,4 +503,58 @@ input.M[type=checkbox]:checked+.M {
     height: 34px;
     overflow: hidden;
     /*background: url('img/selarr.png') no-repeat right #ddd;*/
+}
+
+.T {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    height: 40px;
+    width: calc(100% - 4px);
+    background-color: rgb(190, 190, 190);
+    border: 2px solid rgb(200, 200, 200);
+}
+
+.TIco {
+    height: 30px;
+    width: 30px;
+    background-image: url('img/small_timer.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    margin: 5px;
+}
+
+.TCtrl {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_start.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 2px;
+}
+
+.TCtrl:hover {
+    background-color: rgb(170, 170, 170);
+}
+
+.Tinput {
+    height: 10px;
+    width: calc(100% - 5px);
+    border: 0px none;
+    font-size: 6pt;
+    margin: 2px;
+}
+
+.Tinput:focus {
+    outline: none;
+    box-shadow: 0 0 3px dodgerblue;
+}
+
+.TData {
+    height: 30px;
+    width: 100px;
+    background-color: rgb(170, 170, 170);
+    font-size: 6pt;
+    margin: 5px;
 }

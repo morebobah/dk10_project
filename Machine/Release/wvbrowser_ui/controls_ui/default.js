@@ -172,7 +172,36 @@ function refreshControls() {
     let connectButton = document.createElement('div');
     connectButton.className = 'btn';
     connectButton.id = 'btn-connect';
+    connectButton.title = 'Connect to controller';
     navControls.append(connectButton);
+
+    let sendprgButton = document.createElement('div');
+    sendprgButton.className = 'btn';
+    sendprgButton.id = 'btn-sendprg';
+    sendprgButton.title = 'Send program to controller';
+    navControls.append(sendprgButton);
+
+    let delButton = document.createElement('div');
+    delButton.className = 'btn';
+    delButton.id = 'btn-del';
+    delButton.title = 'Clear program list';
+    navControls.append(delButton);
+
+    /*
+        let saveprgButton = document.createElement('div');
+        saveprgButton.className = 'btn';
+        saveprgButton.id = 'btn-saveprg';
+        saveprgButton.title = 'Save program';
+        navControls.append(saveprgButton);
+
+        let confButton = document.createElement('div');
+        confButton.className = 'btn';
+        confButton.id = 'btn-saveconf';
+        confButton.title = 'Save configuration';
+        navControls.append(confButton);
+    */
+
+
 
     controlsElement.append(navControls);
 
@@ -194,7 +223,15 @@ function refreshControls() {
     portInput.value = '27015';
     portInput.spellcheck = false;
     addressBar.append(portInput);
+
+    let perSwitch = document.createElement('div');
+    perSwitch.className = 'btn';
+    perSwitch.id = 'btn-switcher';
+    perSwitch.title = 'Send command immidiately';
+    perSwitch.innerHTML = '<label class="switch"><input type="checkbox"><span class="slider round"></span></label>';
+    addressBar.append(perSwitch);
     controlsElement.append(addressBar);
+
 
     // Insert controls bar into document
     let tabsElement = document.getElementById('tabs-strip');
@@ -255,6 +292,38 @@ function addControlsListeners() {
                 args: { ipAddr: "ws://" + document.getElementById('ip-field').value + ":" + document.getElementById('port-field').value }
             };
             window.chrome.webview.postMessage(message);
+        }
+    });
+
+    document.querySelector('#btn-sendprg').addEventListener('click', function(e) {
+        if (document.getElementById('btn-sendprg').className === 'btn') {
+            var message = {
+                message: commands.MG_SEND_GCODE,
+                args: { ipAddr: "ws://" + document.getElementById('ip-field').value + ":" + document.getElementById('port-field').value }
+            };
+            window.chrome.webview.postMessage(message);
+        }
+    });
+
+    document.querySelector('#btn-del').addEventListener('click', function(e) {
+        if (document.getElementById('btn-sendprg').className === 'btn') {
+            var message = {
+                message: commands.MG_CLEAR_LIST,
+                args: { ipAddr: "ws://" + document.getElementById('ip-field').value + ":" + document.getElementById('port-field').value }
+            };
+            window.chrome.webview.postMessage(message);
+        }
+    });
+
+    document.querySelector('#btn-switcher').addEventListener('click', function(e) {
+        if (e.pointerId == 1) {
+            if (document.getElementById('btn-switcher').className === 'btn') {
+                var message = {
+                    message: commands.MG_DIRECT_SWITCHER,
+                    args: { ipAddr: "ws://" + document.getElementById('ip-field').value + ":" + document.getElementById('port-field').value }
+                };
+                window.chrome.webview.postMessage(message);
+            }
         }
     });
 
