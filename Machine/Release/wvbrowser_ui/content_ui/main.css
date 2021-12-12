@@ -214,6 +214,14 @@
     overflow-x: hidden;
 }
 
+.gcode {
+    width: 100%;
+}
+
+.gcode:hover {
+    border: 1px solid black;
+}
+
 .machine {
     display: flex;
     flex-direction: column;
@@ -287,8 +295,67 @@
     margin: 2px;
 }
 
-.MCtrl:hover {
+.MSCtrl {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_pause.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 2px;
+}
+
+.MTCtrl {
+    height: 35px;
+    width: 35px;
+}
+
+.MCtrl:hover,
+.MSCtrl:hover,
+.MTCtrl:hover {
     background-color: rgb(170, 170, 170);
+}
+
+input.M[type=checkbox] {
+    display: none;
+}
+
+span.M {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_timer.png');
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+span.M:hover {
+    background-color: rgb(170, 170, 170);
+}
+
+input.M[type=checkbox]:checked+.M {
+    background-image: url('img/small_timer_checked.png');
+}
+
+.MData {
+    height: 30px;
+    width: 100px;
+    background-color: rgb(170, 170, 170);
+    font-size: 6pt;
+    margin: 5px;
+}
+
+.Minput {
+    height: 10px;
+    width: calc(100% - 5px);
+    border: 0px none;
+    font-size: 6pt;
+    margin: 2px;
+}
+
+.Minput:focus {
+    outline: none;
+    box-shadow: 0 0 3px dodgerblue;
 }
 
 .S {
@@ -329,6 +396,20 @@
 }
 
 .SCtrl:hover {
+    background-color: rgb(170, 170, 170);
+}
+
+.SUpd {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_update.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 2px;
+}
+
+.SUpd:hover {
     background-color: rgb(170, 170, 170);
 }
 
@@ -422,4 +503,58 @@
     height: 34px;
     overflow: hidden;
     /*background: url('img/selarr.png') no-repeat right #ddd;*/
+}
+
+.T {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    height: 40px;
+    width: calc(100% - 4px);
+    background-color: rgb(190, 190, 190);
+    border: 2px solid rgb(200, 200, 200);
+}
+
+.TIco {
+    height: 30px;
+    width: 30px;
+    background-image: url('img/small_timer.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    margin: 5px;
+}
+
+.TCtrl {
+    height: 35px;
+    width: 35px;
+    border-radius: 5px;
+    background-image: url('img/small_start.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 2px;
+}
+
+.TCtrl:hover {
+    background-color: rgb(170, 170, 170);
+}
+
+.Tinput {
+    height: 10px;
+    width: calc(100% - 5px);
+    border: 0px none;
+    font-size: 6pt;
+    margin: 2px;
+}
+
+.Tinput:focus {
+    outline: none;
+    box-shadow: 0 0 3px dodgerblue;
+}
+
+.TData {
+    height: 30px;
+    width: 100px;
+    background-color: rgb(170, 170, 170);
+    font-size: 6pt;
+    margin: 5px;
 }
