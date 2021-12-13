@@ -10,11 +10,18 @@
 #include "MHandler.h"
 #include "SD.h"
 #include <SoftwareSerial.h>
+#include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
+#include <DNSServer.h>
+#include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
+#include <WebSocketsServer.h> 
 
 
 Adafruit_MCP23X17 mcp[4];
 //File jsonFile;
 SoftwareSerial SWSerial;
+WebSocketsServer webSocket = WebSocketsServer(81);
+
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
 
 void setup() {
   /* Hardware address A3A2A1
@@ -42,17 +49,49 @@ void setup() {
   if(SD.begin(SS)) Serial.println("SD ok");
   else Serial.println("SD failed");
   
+  WiFiManager wifiManager;
+  wifiManager.autoConnect("AutoConnectAP");
+  Serial.println("connected...yeey :)");
+  delay(1000);
   
+  webSocket.begin();
+  webSocket.onEvent(webSocketEvent);
+
   MH.begin();
   
 }
 
 void loop() {
-  
-  Weigher* w = (Weigher*)MH.M[0]->P[5];
-  //Serial.println((int)w->getV());
-  w->getV();
-  Serial.println(millis());
+  webSocket.loop();
   delay(10);
- 
+}
+
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
+  switch (type) {
+    case WStype_DISCONNECTED:  // Событие происходит при отключени клиента 
+      Serial.println("web Socket disconnected");
+      break;
+    case WStype_CONNECTED: // Событие происходит при подключении клиента
+        Serial.println("web Socket Connected"); 
+      break;
+    case WStype_TEXT: // Событие происходит при получении данных текстового формата из webSocket
+      if (strcmp((char*)payload, "getms") == 0){
+        File f = SD.open("/MACHINE_STRUCT.json");
+        String s = "";
+        while(f.available()){
+          s += (char)f.read();
+        }
+        webSocket.broadcastTXT(s);
+        f.close();
+      }
+      else{
+        Serial.println((char*)payload);
+        //Serial.println();
+      }
+      
+      break;
+    case WStype_BIN:      // Событие происходит при получении бинарных данных из webSocket
+      // webSocket.sendBIN(num, payload, length);
+      break;
+  }
 }
