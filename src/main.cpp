@@ -11,6 +11,7 @@
 #include "SD.h"
 #include <SoftwareSerial.h>
 #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
+//#include <WiFi.h> 
 #include <DNSServer.h>
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
 #include <WebSocketsServer.h> 
@@ -46,27 +47,54 @@ void setup() {
   Serial.println("SWSerial begin");
   Serial.setTimeout(50);
   SWSerial.setTimeout(50);
-  if(SD.begin(SS)) Serial.println("SD ok");
-  else Serial.println("SD failed");
+  boolean bSD = SD.begin(SS);
+  while(!bSD){
+    Serial.println("SD failed");
+    delay(1000);
+    bSD = SD.begin(SS);
+  }
   
   WiFiManager wifiManager;
+  /*
+  if (!WiFi.config("", "", "255.255.255.0")) { //WiFi.config(ip, gateway, subnet, dns1, dns2);
+    Serial.println("WiFi STATION Failed to configure Correctly");
+  }
+  */
   wifiManager.autoConnect("AutoConnectAP");
-  Serial.println("connected...yeey :)");
+  /*
+  WiFi.mode(WIFI_STA);
+  WiFi.begin("universe", "UmuiDvjy");
+  while (WiFi.status() != WL_CONNECTED){
+    Serial.println(WiFi.status());
+    Serial.println(WiFi.macAddress());
+    delay(3000);
+  }
+  */
+  Serial.println("WiFi was connected.)");
   delay(1000);
   
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
 
   MH.begin();
-  
+  std::vector<int> a;
+  std::vector<int>::iterator it = a.begin();
+  a.push_back(0);
+  a.pop_back();
+  a.insert(a.end(), 3);
+  it++;
+
 }
 
 void loop() {
   webSocket.loop();
   delay(10);
+  MH.process();
+  delay(10);
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
+  String upload = "Unknown command";
   switch (type) {
     case WStype_DISCONNECTED:  // Событие происходит при отключени клиента 
       Serial.println("web Socket disconnected");
@@ -75,23 +103,42 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         Serial.println("web Socket Connected"); 
       break;
     case WStype_TEXT: // Событие происходит при получении данных текстового формата из webSocket
-      if (strcmp((char*)payload, "getms") == 0){
-        File f = SD.open("/MACHINE_STRUCT.json");
-        String s = "";
-        while(f.available()){
-          s += (char)f.read();
-        }
-        webSocket.broadcastTXT(s);
-        f.close();
+      Serial.println("Text recived");
+      switch (MH.brancher((char*)payload)) {
+        case 1:
+        Serial.println("1");
+        case 2:
+         Serial.println("2");
+          upload = MH.config();
+          break;
+        case 3:
+        Serial.println("3");
+          upload = MH.handwork((char*)payload);
+          break;
+        case 4:
+          Serial.println("4");
+          break;
+        case 5:
+          Serial.println("5");
+          break;
+        case 6:
+          Serial.println("6");
+          break;
+        case 7:
+          Serial.println("7");
+          break;
+        default:
+          Serial.println("default case unknown command");
+          break;
+        break;
       }
-      else{
-        Serial.println((char*)payload);
-        //Serial.println();
-      }
-      
+      Serial.println(upload.substring(0, 20));
+      webSocket.broadcastTXT(upload);
       break;
     case WStype_BIN:      // Событие происходит при получении бинарных данных из webSocket
       // webSocket.sendBIN(num, payload, length);
       break;
+    default:
+        break;
   }
 }
