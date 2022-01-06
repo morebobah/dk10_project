@@ -105,6 +105,7 @@ class MHandler {
       unsigned int pre_val = 0;
       uint8_t selector = 0;
       uint8_t tmp_val = 0;
+      bool b_new_machine = false;
       for(uint8_t i_for=0; i_for<gcode.length(); i_for++){
         char c_for = gcode.charAt(i_for);
         tmp_val = digitizer(c_for);
@@ -134,24 +135,29 @@ class MHandler {
             tmp_command.value = 0;
             pre_val = 0;
             selector = 0;
+            b_new_machine = true;
           }
         }else{
           switch(selector){
             case 0:
-                tmp_command.machine = tmp_command.machine*10 + tmp_val;
-                break;
+              if(b_new_machine){
+                tmp_command.machine = 0;
+              }
+              tmp_command.machine = tmp_command.machine*10 + tmp_val;
+              break;
             case 1:
             case 2:
             case 4:
-                tmp_command.pin = tmp_command.pin*10 + tmp_val;
-                break;
+              tmp_command.pin = tmp_command.pin*10 + tmp_val;
+              break;
             case 5:
-                pre_val = pre_val*10 + tmp_val;
-                break;
+              pre_val = pre_val*10 + tmp_val;
+              break;
             case 8:
-                pre_time = pre_time*10 + tmp_val;
-                break;
+              pre_time = pre_time*10 + tmp_val;
+              break;
           }
+          b_new_machine = false;
         }
       }
       if(tmp_command.type>0){
