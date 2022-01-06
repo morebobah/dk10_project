@@ -26,7 +26,7 @@ class Machine {
 
       //P = new Pin*[1];
       #ifdef M_DEBUG
-        Serial.printf("Create machine ------------------\n");
+        Serial.printf("Machine: Create machine ------------------\n");
       #endif //M_DEBUG
     };
 

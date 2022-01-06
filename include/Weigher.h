@@ -33,7 +33,7 @@ class Weigher : public Pin {
       this->m_serial = serial_;
 
       #ifdef M_DEBUG
-        Serial.printf("Create weigher Serial adress %d\n", adr_);
+        Serial.printf("Weigher: Create weigher Serial adress %d\n", adr_);
       #endif //DEBUG
     };
     

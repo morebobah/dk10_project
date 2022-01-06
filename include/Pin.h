@@ -33,7 +33,7 @@ class Pin {
       return this->m_pin_type;
     };
     void set_state(uint8_t state_){
-      Serial.print("Pin ");
+      Serial.print("Pin: Pin ");
       Serial.print(this->m_pin);
       Serial.print(" ");
       Serial.print(this->m_pin_type);

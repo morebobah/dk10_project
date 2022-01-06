@@ -56,7 +56,8 @@ class MHandler {
       return (from>47 and from<58) ? (from-48):-1;
     };
 
-    void add_item(COMMAND tmp_command, unsigned int pre_time, unsigned int pre_val, uint8_t tmp_val){
+    void add_item(COMMAND tmp_command, unsigned int pre_time, unsigned int pre_val){
+      if(tmp_command.type == 0)return;
       if(tmp_command.type ==1){
         if(pre_val==0){
           tmp_command.value = this->off;
@@ -68,31 +69,37 @@ class MHandler {
           tmp_command.time_start = millis();
         }
       }else{
-            tmp_command.value = tmp_val;
+            tmp_command.value = pre_val;
       }
       if(bauto){
         auto_queue.push_back(tmp_command);
       }else{
-        Serial.print("type ");
+        /*
+        Serial.print("MH: type ");
         Serial.println(tmp_command.type);
-        Serial.print("machine ");
+        Serial.print("MH: machine ");
         Serial.println(tmp_command.machine);
-        Serial.print("pin ");
+        Serial.print("MH: pin ");
         Serial.println(tmp_command.pin);
-        Serial.print("value ");
+        Serial.print("MH: value ");
         Serial.println(tmp_command.value);
-        Serial.print("time_start ");
+        Serial.print("MH: time_start ");
         Serial.println(tmp_command.time_start);
-        Serial.print("time ");
+        Serial.print("MH: time ");
         Serial.println(tmp_command.time);
+        */
         hand_queue.push_back(tmp_command);
-        Serial.println("Just append size of hand queue");
+        /*
+        Serial.print("MH: New size of hand queue ");
         Serial.println(hand_queue.size());
+        */
       }
     };
     
     String item_to_queue(String gcode){
-      Serial.println(gcode);
+      Serial.print("MH: clear code=\"");
+      Serial.print(gcode);
+      Serial.println("\"");
       COMMAND tmp_command;
       unsigned int pre_time = 0;
       unsigned int pre_val = 0;
@@ -100,15 +107,12 @@ class MHandler {
       uint8_t tmp_val = 0;
       for(uint8_t i_for=0; i_for<gcode.length(); i_for++){
         char c_for = gcode.charAt(i_for);
-        Serial.println(c_for);
         tmp_val = digitizer(c_for);
-        Serial.println(tmp_val);
         if(tmp_val==255){
           if(c_for=='T'){
             selector = 8;
           }
           if(c_for=='M'){
-            Serial.println("Инициализируем мотор");
             tmp_command.type = 1;
             selector = 1;
           };
@@ -124,13 +128,12 @@ class MHandler {
             selector = 5;
           };
           if(c_for=='+'){
-            add_item(tmp_command, pre_time, pre_val, tmp_val);
+            add_item(tmp_command, pre_time, pre_val);
             tmp_command.type = 0;
-            //tmp_command.machine = 0;
             tmp_command.pin = 0;
             tmp_command.value = 0;
-            pre_time = 0;
             pre_val = 0;
+            selector = 0;
           }
         }else{
           switch(selector){
@@ -152,7 +155,7 @@ class MHandler {
         }
       }
       if(tmp_command.type>0){
-        add_item(tmp_command, pre_time, pre_val, tmp_val);
+        add_item(tmp_command, pre_time, pre_val);
       }
       return "";
     };
@@ -160,7 +163,9 @@ class MHandler {
     String next_command(){
       if(this->gcode.length()>0){
         int end_pos = 0;
-        Serial.println(this->gcode);
+        Serial.print("MH: gcode=\"");
+        Serial.print(this->gcode);
+        Serial.println("\"");
         end_pos = this->gcode.indexOf('G', 1);
         if(end_pos>0){
           item_to_queue(this->gcode.substring(1, end_pos));
@@ -180,9 +185,9 @@ class MHandler {
 
     void resetIni(){
       File fp = SD.open( iniFileName, "w" );
-      Serial.println("create new ini");
+      Serial.println("MH: create new ini");
       if(fp){
-        Serial.println("file created");
+        Serial.println("MH: file created");
         fp.write("[HEADER]\n");
         fp.write("defaultJson=/MACHINE_STRUCT.json\n");
         fp.write("onoffinvert=true\n");
@@ -210,7 +215,7 @@ class MHandler {
 
 
       File jsonFile = SD.open(defaultJson);
-      if(!jsonFile) Serial.println("Don't open file");
+      if(!jsonFile) Serial.println("MH: Don't open file");
       DynamicJsonDocument doc(4096);
       DeserializationError error = deserializeJson(doc, jsonFile);
       if (error) {
@@ -263,7 +268,7 @@ class MHandler {
       String result = "";
       if(gcode.isEmpty()){
         File f = SD.open(defaultJson);
-        if(!f)return "Error no struct json file";
+        if(!f)return "MH: Error no struct json file";
         while(f.available()){
           result += (char)f.read();
         }
@@ -286,9 +291,7 @@ class MHandler {
               case 1:
                 if(((*it).time_start +  1000 * (*it).time)<millis() and this->hand_queue.size()<2){
                   this->M.at((*it).machine)->at((*it).pin)->set_state((*it).value);
-                  Serial.println("Должно быть удаление");
                   this->hand_queue.pop_back();
-                  Serial.println(this->hand_queue.size());
                   next_command();
                 }
                 break;
@@ -307,10 +310,6 @@ class MHandler {
             if(this->hand_queue.size()==0){
               break;
             }
-          }
-          if(this->hand_queue.size()>2){
-            Serial.println("size after check");
-            Serial.println(this->hand_queue.size());
           }
         }
       }

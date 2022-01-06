@@ -9,7 +9,7 @@ class Motor : public Pin {
     Motor(Adafruit_MCP23X17 *mcp_, uint8_t pin_):Pin(mcp_, pin_, MOTOR){
       m_mcp->pinMode(m_pin, OUTPUT);
       #ifdef M_DEBUG
-        Serial.printf("Create motor pin %d\n", pin_);
+        Serial.printf("Motor: Create motor pin %d\n", pin_);
       #endif //DEBUG
     }
 };

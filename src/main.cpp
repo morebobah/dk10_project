@@ -42,14 +42,14 @@ void setup() {
   pinMode(9, INPUT);
   Serial.begin(9600);
   Serial.println();
-  Serial.println("Serial begin");
+  Serial.println("Main: Serial begin");
   SWSerial.begin(9600,SWSERIAL_8N1, D3, D4);
-  Serial.println("SWSerial begin");
+  Serial.println("Main: SWSerial begin");
   Serial.setTimeout(50);
   SWSerial.setTimeout(50);
   boolean bSD = SD.begin(SS);
   while(!bSD){
-    Serial.println("SD failed");
+    Serial.println("Main: SD failed");
     delay(1000);
     bSD = SD.begin(SS);
   }
@@ -70,7 +70,7 @@ void setup() {
     delay(3000);
   }
   */
-  Serial.println("WiFi was connected.)");
+  Serial.println("Main: WiFi was connected.)");
   delay(1000);
   
   webSocket.begin();
@@ -97,42 +97,44 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
   String upload = "Unknown command";
   switch (type) {
     case WStype_DISCONNECTED:  // Событие происходит при отключени клиента 
-      Serial.println("web Socket disconnected");
+      Serial.println("Main: web Socket disconnected");
       break;
     case WStype_CONNECTED: // Событие происходит при подключении клиента
-        Serial.println("web Socket Connected"); 
+        Serial.println("Main: web Socket Connected"); 
       break;
     case WStype_TEXT: // Событие происходит при получении данных текстового формата из webSocket
-      Serial.println("Text recived");
+      Serial.println("Main: Text recived");
       switch (MH.brancher((char*)payload)) {
         case 1:
-        Serial.println("1");
+        Serial.println("Main: try to activated set config command");
         case 2:
-         Serial.println("2");
+         Serial.println("Main: try to activated get config command");
           upload = MH.config();
           break;
         case 3:
-        Serial.println("3");
+        Serial.println("Main: try to activated gcode");
           upload = MH.handwork((char*)payload);
           break;
         case 4:
-          Serial.println("4");
+          Serial.println("Main: try to activated program from SD");
           break;
         case 5:
-          Serial.println("5");
+          Serial.println("Main: try to save program to SD");
           break;
         case 6:
-          Serial.println("6");
+          Serial.println("Main: try to delete program from SD");
           break;
         case 7:
-          Serial.println("7");
+          Serial.println("Main: try to restore to factory settigs");
           break;
         default:
-          Serial.println("default case unknown command");
+          Serial.println("Main: uncnown command");
           break;
         break;
       }
-      Serial.println(upload.substring(0, 20));
+      Serial.print("Main: send to PC \"");
+      Serial.print(upload.substring(0, 5));
+      Serial.println("\"");
       webSocket.broadcastTXT(upload);
       break;
     case WStype_BIN:      // Событие происходит при получении бинарных данных из webSocket
