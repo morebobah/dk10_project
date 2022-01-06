@@ -127,6 +127,10 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         case 7:
           Serial.println("Main: try to restore to factory settigs");
           break;
+        case 8:
+          Serial.println("Main: try to get list of programs");
+          upload = MH.listofprg((char*)payload);
+          break;
         default:
           Serial.println("Main: uncnown command");
           break;

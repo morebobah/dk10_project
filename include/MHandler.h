@@ -53,7 +53,7 @@ class MHandler {
     };
 
     uint8_t digitizer(char from){
-      return (from>47 and from<58) ? (from-48):-1;
+      return (from>47 and from<58) ? (from-48):255;
     };
 
     void add_item(COMMAND tmp_command, unsigned int pre_time, unsigned int pre_val){
@@ -185,6 +185,20 @@ class MHandler {
         return "";
       }
     };
+
+    uint16_t validprg(String s){
+      uint16_t result = 0;
+      uint8_t tmp_val = 255;
+      if(s.indexOf("prg[")!=0)return 0;
+      uint8_t pos = 4;
+      do{
+        char from = s.charAt(pos);
+        tmp_val = digitizer(from);
+        if(tmp_val<10)result = 10 * result + tmp_val;
+        pos++;
+      }while(tmp_val!=255);
+      return result;
+    };
   
   public:
     MHandler(){};
@@ -207,7 +221,7 @@ class MHandler {
       File fp = SD.open( iniFileName, "r" );
       Serial.println(fp);
       if(fp){
-        Serial.println("ini opened");
+        Serial.println("MH: ini opened");
         defaultJson = iFile.inifileString( fp, iniHeader, "defaultJson", "/MACHINE_STRUCT.json" );
         bool bOnOff= iFile.inifileBool( fp, iniHeader, "onoffinvert", false );
         if(bOnOff){
@@ -254,6 +268,7 @@ class MHandler {
       if(strncmp(payload, "start_prg", 9)==0) return 4; //start saved program
       if(strncmp(payload, "save_prg", 8)==0) return 5; //save program to SD
       if(strncmp(payload, "del_prg", 7)==0) return 6; //delete saved program
+      if(strncmp(payload, "get_list_prg", 12)==0) return 8; //get list of saved prog
       if(strncmp(payload, "restore_to_factory_settings[lDDQD]", 34)==0) return 7; //save blank ini file to SD card
       return 0;
     }
@@ -280,6 +295,43 @@ class MHandler {
         }
         f.close();
       }
+      return result;
+    };
+
+    String listofprg(String gcode=""){
+      String result;
+      DynamicJsonDocument doc(4096);
+      int16_t numprg = 0;
+      int16_t cntprg = 0;
+      String json;
+      char cOne = '\0';
+      File root = SD.open("/");
+      File dir = root.openNextFile();
+      while(dir){
+        String line = "";
+        numprg = validprg(dir.name());
+        //Serial.println(dir.name());
+        //Serial.println(numprg);
+        if(numprg>0){
+          if(!dir.isDirectory()){
+            while(dir.available()){
+              cOne = (char)dir.read();
+              if(cOne=='\r' or cOne=='\n' or cOne=='G') break;
+              line += cOne;
+            }
+          }
+          //result += line;
+          doc["program"][cntprg]["name"] = line;
+          doc["program"][cntprg]["ID"] = numprg;
+          cntprg++;
+        }
+        dir = root.openNextFile();
+      }
+      dir.close();
+      root.close();
+      //Serial.print("MH: ");
+      //Serial.print(result);
+      serializeJson(doc, result);
       return result;
     };
 
