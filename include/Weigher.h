@@ -28,13 +28,12 @@ class Weigher : public Pin {
     uint8_t m_adr;
     HardwareSerial *m_serial;
 
-    Weigher(HardwareSerial *serial_, uint8_t adr_) : Pin(0,0){
-      m_pin_type = WEIGHER;
+    Weigher(HardwareSerial *serial_, uint8_t adr_) : Pin(0,0, WEIGHER){
       this->m_adr = adr_;
       this->m_serial = serial_;
 
       #ifdef M_DEBUG
-        Serial.printf("Create weigher Serial adress %d\n", adr_);
+        Serial.printf("Weigher: Create weigher Serial adress %d\n", adr_);
       #endif //DEBUG
     };
     

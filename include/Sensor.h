@@ -6,11 +6,10 @@
 
 class Sensor : public Pin {
   public:
-    Sensor (Adafruit_MCP23X17 *mcp_, uint8_t pin_):Pin(mcp_, pin_){
-      m_pin_type = SENSOR;
+    Sensor (Adafruit_MCP23X17 *mcp_, uint8_t pin_):Pin(mcp_, pin_, SENSOR){
       m_mcp->pinMode(m_pin, INPUT);
       #ifdef M_DEBUG
-        Serial.printf("Create sensor mcp %d pin %d\n", 0, pin_);
+        Serial.printf("Sensor: Create sensor mcp %d pin %d\n", 0, pin_);
       #endif //DEBUG
     }
 };
