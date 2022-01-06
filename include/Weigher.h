@@ -68,6 +68,10 @@ class Weigher : public Pin {
       return -1;
     };
 
+    int getW(int v0 = 156){
+      int v = this->getV();
+      return (v-v0)*4;
+    }
     uint16_t CRC16_2(unsigned char *buf, int len){  
       uint16_t crc = 0xFFFF;
       for (int pos = 0; pos < len; pos++)
