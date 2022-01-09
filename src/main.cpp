@@ -39,7 +39,7 @@ void setup() {
   mcp[1].begin_I2C(0x21);
   mcp[2].begin_I2C(0x22);
   mcp[3].begin_I2C(0x23);
-  pinMode(9, INPUT);
+  //pinMode(9, INPUT);
   Serial.begin(9600);
   Serial.println();
   Serial.println("Main: Serial begin");
@@ -53,7 +53,6 @@ void setup() {
     delay(1000);
     bSD = SD.begin(SS);
   }
-  
   WiFiManager wifiManager;
   /*
   if (!WiFi.config("", "", "255.255.255.0")) { //WiFi.config(ip, gateway, subnet, dns1, dns2);
@@ -94,7 +93,7 @@ void loop() {
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
-  String upload = "Unknown command";
+  String upload = (char*)payload;
   switch (type) {
     case WStype_DISCONNECTED:  // Событие происходит при отключени клиента 
       Serial.println("Main: web Socket disconnected");
@@ -137,7 +136,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         break;
       }
       Serial.print("Main: send to PC \"");
-      Serial.print(upload.substring(0, 5));
+      Serial.print(upload.substring(0, 10));
       Serial.println("\"");
       webSocket.broadcastTXT(upload);
       break;

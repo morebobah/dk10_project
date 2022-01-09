@@ -263,7 +263,7 @@ class MHandler {
 
     byte brancher(char * payload){ //this method set commands PC-ESP conversation
       if(strncmp(payload, "config_upload", 13)==0) return 1; //upload config from PC to ESP
-      if(strncmp(payload, "config_download", 15)==0) return 2; //load config to PC from ESP
+      if(strncmp(payload, "getms", 15)==0) return 2; //load config to PC from ESP "config_download"
       if(strncmp(payload, "G", 1)==0) return 3; //gcode list
       if(strncmp(payload, "start_prg", 9)==0) return 4; //start saved program
       if(strncmp(payload, "save_prg", 8)==0) return 5; //save program to SD
@@ -354,7 +354,7 @@ class MHandler {
                 }
                 break;
               case 2:
-                if((bool)((*it).value) and this->M.at((*it).machine)->at((*it).pin)->get_state()){
+                if((bool)((*it).value) == this->M.at((*it).machine)->at((*it).pin)->get_state()){
                   this->hand_queue.erase(it);
                 }
                 break;
