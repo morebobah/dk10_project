@@ -15,7 +15,10 @@
 #include <DNSServer.h>
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
 #include <WebSocketsServer.h> 
+#include <liquidcrystal_i2c.h>
 
+#define COLUMS           16
+#define ROWS             2
 
 Adafruit_MCP23X17 mcp[4];
 //File jsonFile;
@@ -23,6 +26,7 @@ SoftwareSerial SWSerial;
 WebSocketsServer webSocket = WebSocketsServer(81);
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
+LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 
 void setup() {
   /* Hardware address A3A2A1
@@ -43,10 +47,11 @@ void setup() {
   Serial.begin(9600);
   Serial.println();
   Serial.println("Main: Serial begin");
-  SWSerial.begin(9600,SWSERIAL_8N1, D3, D4);
+  SWSerial.begin(9600,SWSERIAL_8N1, D4, D3);
+  pinMode(D4, INPUT);
   Serial.println("Main: SWSerial begin");
   Serial.setTimeout(50);
-  SWSerial.setTimeout(50);
+  SWSerial.setTimeout(100);
   boolean bSD = SD.begin(SS);
   while(!bSD){
     Serial.println("Main: SD failed");
@@ -54,21 +59,9 @@ void setup() {
     bSD = SD.begin(SS);
   }
   WiFiManager wifiManager;
-  /*
-  if (!WiFi.config("", "", "255.255.255.0")) { //WiFi.config(ip, gateway, subnet, dns1, dns2);
-    Serial.println("WiFi STATION Failed to configure Correctly");
-  }
-  */
+ 
   wifiManager.autoConnect("AutoConnectAP");
-  /*
-  WiFi.mode(WIFI_STA);
-  WiFi.begin("universe", "UmuiDvjy");
-  while (WiFi.status() != WL_CONNECTED){
-    Serial.println(WiFi.status());
-    Serial.println(WiFi.macAddress());
-    delay(3000);
-  }
-  */
+ 
   Serial.println("Main: WiFi was connected.)");
   delay(1000);
   

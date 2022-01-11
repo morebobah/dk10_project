@@ -2,7 +2,7 @@
 #define WEIGHER_H
 
 #include <arduino.h>
-//#include <ModbusRTU.h>
+#include "Pin.h"
 
 struct request{
   uint8_t MbAddr;
@@ -49,20 +49,24 @@ class Weigher : public Pin {
       buf.CRC = CRC16_2((byte*)&buf, sizeof(buf) - sizeof(uint16_t));
 
       m_serial->write((byte*)&buf, sizeof(buf));
-      if(Serial.available() > 0){
-        Serial.println();
-        Serial.print(Serial.read());
-      }  
+      
 
       if(m_serial->readBytes((byte*)&res, sizeof(res))){
         // if(m_serial->available() > 0){
         //   m_serial->flush();
         // }
         uint16_t crc = CRC16_2((byte*)&res, sizeof(res));
+        // Serial.printf("Adr %d\n", res.MbAddr);
+        // Serial.printf("Comand %d\n", res.command);
+        // Serial.printf("ByteCnt %d\n", res.ByteCnt);
+        // Serial.printf("ValueH %d\n", res.ValueH);
+        // Serial.printf("ValueL %d\n", res.ValueL);
+        // Serial.printf("CRC recived %d\n", res.CRC);
+        // Serial.printf("CRC calculated %d\n", crc);
 
-        if (crc == 0){
+        //if (crc == 0){
           return (res.ValueH << 8) + res.ValueL;
-        }
+        //}
       }
       return -1;
     };
@@ -70,7 +74,8 @@ class Weigher : public Pin {
     int getW(int v0 = 156){
       int v = this->getV();
       return (v-v0)*4;
-    }
+    };
+
     uint16_t CRC16_2(unsigned char *buf, int len){  
       uint16_t crc = 0xFFFF;
       for (int pos = 0; pos < len; pos++)
@@ -88,7 +93,7 @@ class Weigher : public Pin {
       }
 
       return crc;
-    }
+    };
    
 };
 
