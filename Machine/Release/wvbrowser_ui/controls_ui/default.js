@@ -187,13 +187,14 @@ function refreshControls() {
     delButton.title = 'Clear program list';
     navControls.append(delButton);
 
-    /*
-        let saveprgButton = document.createElement('div');
-        saveprgButton.className = 'btn';
-        saveprgButton.id = 'btn-saveprg';
-        saveprgButton.title = 'Save program';
-        navControls.append(saveprgButton);
 
+    let saveprgButton = document.createElement('div');
+    saveprgButton.className = 'btn';
+    saveprgButton.id = 'btn-saveprg';
+    saveprgButton.title = 'Save program';
+    navControls.append(saveprgButton);
+
+    /*
         let confButton = document.createElement('div');
         confButton.className = 'btn';
         confButton.id = 'btn-saveconf';
@@ -212,7 +213,7 @@ function refreshControls() {
     ipInput.id = 'ip-field';
     ipInput.placeholder = 'IP address';
     ipInput.type = 'text';
-    ipInput.value = '192.168.0.22';
+    ipInput.value = '192.168.1.53';
     ipInput.spellcheck = false;
     addressBar.append(ipInput);
 

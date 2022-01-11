@@ -8,6 +8,7 @@ var ipAddr = null;
 var gcode = '';
 var bDirect = true;
 var sended = ' sended';
+var brancher = 0;
 
 /*
 
@@ -291,15 +292,24 @@ const messageHandler = event => {
                 } else {
                     console.log('Обрыв соединения'); // например, "убит" процесс сервера
                 }
+                brancher = 0;
                 console.log('Код: ' + event.code + ' причина: ' + event.reason);
             };
             socket.onmessage = function(event) {
-                refreshPanel(event.data);
+                switch (brancher) {
+                    case 1:
+                        refreshAuto(event.data);
+                        break;
+                    default:
+                        refreshPanel(event.data);
+                        brancher = 1;
+                        sendText("get_list_prg");
+                }
             };
             break;
         case commands.MG_SOCKET_ESTABLISHED:
-            sendText("getms");
-
+            sendText("config_download");
+            brancher = 0;
             break;
         case commands.MG_DIRECT_SWITCHER:
             bDirect = !bDirect;
@@ -313,42 +323,89 @@ const messageHandler = event => {
     }
 }
 
-function refreshAuto() {
-    let ctrlBar = document.createElement('div');
+function refreshAuto(data) {
+    var objJSON = $.parseJSON(data);
+    var keys = Object.keys(objJSON);
+    let ctrlBar = document.getElementById('apanel');
+    if (ctrlBar) {
+        ctrlBar.remove();
+    }
+
+    ctrlBar = document.createElement('div');
     ctrlBar.id = 'apanel';
     ctrlBar.className = 'barsControls';
 
-    let startBtn = document.createElement('input');
-    startBtn.id = 'startButton';
-    startBtn.type = 'button';
-    startBtn.value = 'Старт';
-    startBtn.className = 'ctrlBTN';
-    ctrlBar.append(startBtn);
+    let mainpanel = document.createElement('div');
+    mainpanel.className = 'main_auto_panel';
+    let titlepanel = document.createElement('div');
+    titlepanel.className = 'title_auto_panel';
+    titlepanel.innerHTML = 'Запуск автоматических программ';
+    mainpanel.append(titlepanel);
+    let bodypanel = document.createElement('div');
+    bodypanel.className = 'body_auto_panel';
+    mainpanel.append(bodypanel);
+    let keyspanel = document.createElement('div');
+    keyspanel.className = 'keys_auto_panel';
+    bodypanel.append(keyspanel);
+    let start_bnt = document.createElement('input');
+    start_bnt.type = 'button';
+    start_bnt.className = 'btn_auto';
+    start_bnt.value = 'Старт';
+    keyspanel.append(start_bnt);
+    let pause_bnt = document.createElement('input');
+    pause_bnt.type = 'button';
+    pause_bnt.className = 'btn_auto';
+    pause_bnt.value = 'Пауза';
+    keyspanel.append(pause_bnt);
+    let stop_bnt = document.createElement('input');
+    stop_bnt.type = 'button';
+    stop_bnt.className = 'btn_auto';
+    stop_bnt.value = 'Стоп';
+    keyspanel.append(stop_bnt);
+    let ctrlpanel = document.createElement('div');
+    ctrlpanel.className = 'ctrl_auto';
+    bodypanel.append(ctrlpanel);
+    let runstr = document.createElement('div');
+    runstr.className = 'run_string';
+    runstr.id = 'runstring';
+    ctrlpanel.append(runstr);
+    let itemslist = document.createElement('div');
+    itemslist.className = 'items_list';
+    ctrlpanel.append(itemslist);
 
-    let stopBtn = document.createElement('input');
-    stopBtn.id = 'stopButton';
-    stopBtn.type = 'button';
-    stopBtn.value = 'Стоп';
-    stopBtn.className = 'ctrlBTN';
-    ctrlBar.append(stopBtn);
 
-    let pauseBtn = document.createElement('input');
-    pauseBtn.id = 'pauseButton';
-    pauseBtn.type = 'button';
-    pauseBtn.value = 'Пауза';
-    pauseBtn.className = 'ctrlBTN';
-    ctrlBar.append(pauseBtn);
+    $.each(objJSON[keys], function(key, val) {
+        var iNumOption = 0;
+        let optname = '';
+        let optid = '';
+        Object.keys(val).forEach(function(k) {
+            if (k == "name") {
+                optname = val[k];
+                iNumOption += 1;
+            }
+            if (k == "ID") {
+                optid = 'start_prg' + val[k].toString();
+                iNumOption += 2;
+            }
+            if (iNumOption == 3) {
+                let item_div = document.createElement('div');
+                item_div.className = 'item_auto_prg';
+                html = '<label class="switch">';
+                html += '<input type="checkbox"><span class="slider round"></span></label><span>';
+                html += '<span class="prg" data-key="' + optid + '">' + optname + '</span>';
+                item_div.innerHTML = html;
+                itemslist.append(item_div);
+                item_div.addEventListener('click', function(e) {
+                    if (e.target.className != 'prg') return;
+                    let runstr = document.getElementById('runstring');
+                    runstr.innerHTML = e.target.innerHTML;
+                    runstr.setAttribute('data-key', e.target.getAttribute('data-key'));
+                });
+            }
+        });
+    });
 
-    let AutoPrg = document.createElement('div');
-    AutoPrg.id = 'prgSelDiv';
-    AutoPrg.className = 'styled-select';
-    let AutoPrgSelector = document.createElement('select');
-    AutoPrgSelector.id = 'prgSel';
-    let AutoPrgOpts = document.createElement('option');
-    AutoPrgOpts.id = 'prgOpt';
-    AutoPrgOpts.innerHTML = 'sjkjhnkdj';
-    AutoPrgSelector.append(AutoPrgOpts);
-    AutoPrg.append(AutoPrgSelector);
+    ctrlBar.append(mainpanel);
 
     let mainBar = document.getElementById('autoBar');
     mainBar.append(ctrlBar);
@@ -628,7 +685,6 @@ function addControlsListeners() {}
 
 function init() {
     bDirect = false;
-    //refreshAuto();
     refreshRecord();
     window.chrome.webview.addEventListener('message', messageHandler);
     addControlsListeners();
