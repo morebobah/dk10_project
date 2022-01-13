@@ -639,6 +639,16 @@ input.M[type=checkbox]:checked+.M {
     cursor: pointer;
 }
 
+.disitem_auto_prg {
+    width: 100%;
+    min-height: 25px;
+    height: 25px;
+    margin: 1px;
+    color: #a9a9a9;
+    cursor: pointer;
+    pointer-events: none;
+}
+
 .switch {
     position: relative;
     display: inline-block;

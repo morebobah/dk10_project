@@ -349,18 +349,24 @@ function refreshAuto(data) {
     bodypanel.append(keyspanel);
     let start_bnt = document.createElement('input');
     start_bnt.type = 'button';
+    start_bnt.id = 'start_btn';
     start_bnt.className = 'btn_auto';
     start_bnt.value = 'Старт';
+    start_bnt.disabled = true;
     keyspanel.append(start_bnt);
     let pause_bnt = document.createElement('input');
     pause_bnt.type = 'button';
+    pause_bnt.id = 'pause_btn';
     pause_bnt.className = 'btn_auto';
     pause_bnt.value = 'Пауза';
+    pause_bnt.disabled = true;
     keyspanel.append(pause_bnt);
     let stop_bnt = document.createElement('input');
     stop_bnt.type = 'button';
+    stop_bnt.id = 'stop_btn';
     stop_bnt.className = 'btn_auto';
     stop_bnt.value = 'Стоп';
+    stop_bnt.disabled = true;
     keyspanel.append(stop_bnt);
     let ctrlpanel = document.createElement('div');
     ctrlpanel.className = 'ctrl_auto';
@@ -390,6 +396,7 @@ function refreshAuto(data) {
             if (iNumOption == 3) {
                 let item_div = document.createElement('div');
                 item_div.className = 'item_auto_prg';
+                item_div.id = optid;
                 html = '<label class="switch">';
                 html += '<input type="checkbox"><span class="slider round"></span></label><span>';
                 html += '<span class="prg" data-key="' + optid + '">' + optname + '</span>';
@@ -400,9 +407,38 @@ function refreshAuto(data) {
                     let runstr = document.getElementById('runstring');
                     runstr.innerHTML = e.target.innerHTML;
                     runstr.setAttribute('data-key', e.target.getAttribute('data-key'));
+                    let sbtn = document.getElementById('start_btn');
+                    let pbtn = document.getElementById('pause_btn');
+                    let stbtn = document.getElementById('stop_btn');
+                    sbtn.setAttribute('data-key', e.target.getAttribute('data-key'));
+                    sbtn.style.backgroundColor = 'lime';
+                    sbtn.disabled = false;
+                    pbtn.disabled = true;
+                    stbtn.disabled = true;
+                    pbtn.style.backgroundColor = '';
+                    stbtn.style.backgroundColor = '';
                 });
             }
         });
+    });
+
+    start_bnt.addEventListener('click', function(e) {
+        gcode = e.target.getAttribute('data-key');
+        if (gcode == '') return;
+        document.getElementById(gcode).disabled = true;
+        e.target.disabled = true;
+        e.target.style.backgroundColor = '';
+        let pbtn = document.getElementById('pause_btn');
+        let stbtn = document.getElementById('stop_btn');
+        pbtn.disabled = false;
+        stbtn.disabled = false;
+        pbtn.style.backgroundColor = 'lime';
+        stbtn.style.backgroundColor = 'darkred';
+        Array.from(document.getElementsByClassName('prg')).forEach(function(k) {
+            k.className = 'disitem_auto_prg';
+        });
+
+        sendText(gcode);
     });
 
     ctrlBar.append(mainpanel);
