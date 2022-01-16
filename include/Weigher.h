@@ -32,7 +32,7 @@ class Weigher : public Pin {
       this->m_adr = adr_;
       this->m_serial = serial_;
 
-      #ifdef M_DEBUG
+      #ifdef WEI_DEBUG
         Serial.printf("Weigher: Create weigher Serial adress %d\n", adr_);
       #endif //DEBUG
     };
@@ -55,14 +55,16 @@ class Weigher : public Pin {
         // if(m_serial->available() > 0){
         //   m_serial->flush();
         // }
-        uint16_t crc = CRC16_2((byte*)&res, sizeof(res));
-        // Serial.printf("Adr %d\n", res.MbAddr);
-        // Serial.printf("Comand %d\n", res.command);
-        // Serial.printf("ByteCnt %d\n", res.ByteCnt);
-        // Serial.printf("ValueH %d\n", res.ValueH);
-        // Serial.printf("ValueL %d\n", res.ValueL);
-        // Serial.printf("CRC recived %d\n", res.CRC);
-        // Serial.printf("CRC calculated %d\n", crc);
+        //uint16_t crc = CRC16_2((byte*)&res, sizeof(res));
+        #ifdef WEI_DEBUG
+          // Serial.printf("Adr %d\n", res.MbAddr);
+          // Serial.printf("Comand %d\n", res.command);
+          // Serial.printf("ByteCnt %d\n", res.ByteCnt);
+          // Serial.printf("ValueH %d\n", res.ValueH);
+          // Serial.printf("ValueL %d\n", res.ValueL);
+          // Serial.printf("CRC recived %d\n", res.CRC);
+          // Serial.printf("CRC calculated %d\n", crc);
+        #endif
 
         //if (crc == 0){
           return (res.ValueH << 8) + res.ValueL;

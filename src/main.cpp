@@ -1,4 +1,13 @@
-#define M_DEBUG
+#define MAIN_DEBUG
+#define MH_DEBUG
+#define MACH_DEBUG
+#define PIN_DEBUG
+#define MOTOR_DEBUG
+#define SENSOR_DEBUG
+#define WEI_DEBUG
+#define INI_DEBUG
+
+
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -45,13 +54,18 @@ void setup() {
   mcp[3].begin_I2C(0x23);
   //pinMode(9, INPUT);
   Serial.begin(9600);
-  Serial.println();
-  Serial.println("Main: Serial begin");
-  SWSerial.begin(9600,SWSERIAL_8N1, D4, D3);
+  #ifdef MAIN_DEBUG
+    Serial.println();
+    Serial.println("Main: Serial begin");
+    SWSerial.begin(9600,SWSERIAL_8N1, D4, D3);
+  #endif
   pinMode(D4, INPUT);
-  Serial.println("Main: SWSerial begin");
-  Serial.setTimeout(50);
+  #ifdef MAIN_DEBUG
+    Serial.println("Main: SWSerial begin");
+    Serial.setTimeout(50);
+  #endif
   SWSerial.setTimeout(100);
+
   boolean bSD = SD.begin(SS);
   while(!bSD){
     Serial.println("Main: SD failed");
@@ -62,7 +76,9 @@ void setup() {
  
   wifiManager.autoConnect("AutoConnectAP");
  
-  Serial.println("Main: WiFi was connected.)");
+  #ifdef MAIN_DEBUG
+    Serial.println("Main: WiFi was connected.)");
+  #endif
   delay(1000);
   
   webSocket.begin();
@@ -95,7 +111,10 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         Serial.println("Main: web Socket Connected"); 
       break;
     case WStype_TEXT: // Событие происходит при получении данных текстового формата из webSocket
-      Serial.println("Main: Text recived");
+      #ifdef MAIN_DEBUG
+        Serial.println("Main: Text recived");
+        Serial.println((char*)payload);
+      #endif
       switch (MH.brancher((char*)payload)) {
         case 1:
         Serial.println("Main: try to activated set config command");
@@ -128,9 +147,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           break;
         break;
       }
-      Serial.print("Main: send to PC \"");
-      Serial.print(upload.substring(0, 10));
-      Serial.println("\"");
+      #ifdef MAIN_DEBUG
+        Serial.print("Main: send to PC \"");
+        Serial.print(upload.substring(0, 10));
+        Serial.println("\"");
+      #endif
       webSocket.broadcastTXT(upload);
       break;
     case WStype_BIN:      // Событие происходит при получении бинарных данных из webSocket

@@ -33,12 +33,14 @@ class Pin {
       return this->m_pin_type;
     };
     void set_state(uint8_t state_){
-      Serial.print("Pin: Pin ");
-      Serial.print(this->m_pin);
-      Serial.print(" ");
-      Serial.print(this->m_pin_type);
-      Serial.print(" set to ");
-      Serial.println(state_);
+      #ifdef PIN_DEBUG
+        Serial.print("Pin: Pin ");
+        Serial.print(this->m_pin);
+        Serial.print(" ");
+        Serial.print(this->m_pin_type);
+        Serial.print(" set to ");
+        Serial.println(state_);
+      #endif
       this->m_mcp->digitalWrite(this->m_pin, state_);
     };
 

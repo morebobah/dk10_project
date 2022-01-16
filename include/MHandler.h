@@ -97,9 +97,11 @@ class MHandler {
     };
     
     String item_to_queue(String gcode){
-      Serial.print("MH: clear code=\"");
-      Serial.print(gcode);
-      Serial.println("\"");
+      #ifdef MH_DEBUG
+        Serial.print("MH: clear code=\"");
+        Serial.print(gcode);
+        Serial.println("\"");
+      #endif
       COMMAND tmp_command;
       unsigned int pre_time = 0;
       unsigned int pre_val = 0;
@@ -169,9 +171,11 @@ class MHandler {
     String next_command(){
       if(this->gcode.length()>0){
         int end_pos = 0;
-        Serial.print("MH: gcode=\"");
-        Serial.print(this->gcode);
-        Serial.println("\"");
+        #ifdef MH_DEBUG
+          Serial.print("MH: gcode=\"");
+          Serial.print(this->gcode);
+          Serial.println("\"");
+        #endif
         end_pos = this->gcode.indexOf('G', 1);
         if(end_pos>0){
           item_to_queue(this->gcode.substring(1, end_pos));
@@ -205,9 +209,13 @@ class MHandler {
 
     void resetIni(){
       File fp = SD.open( iniFileName, "w" );
-      Serial.println("MH: create new ini");
+      #ifdef MH_DEBUG
+        Serial.println("MH: create new ini");
+      #endif
       if(fp){
-        Serial.println("MH: file created");
+        #ifdef MH_DEBUG
+          Serial.println("MH: file created");
+        #endif
         fp.write("[HEADER]\n");
         fp.write("defaultJson=/MACHINE_STRUCT.json\n");
         fp.write("onoffinvert=true\n");
@@ -216,12 +224,16 @@ class MHandler {
     };
 
     void begin(){
-      char * iniHeader = "HEADER";
+      String iniHeader("HEADER");
       iniFile iFile;
       File fp = SD.open( iniFileName, "r" );
-      Serial.println(fp);
+      #ifdef MH_DEBUG
+        Serial.println(fp);
+      #endif
       if(fp){
-        Serial.println("MH: ini opened");
+        #ifdef MH_DEBUG
+          Serial.println("MH: ini opened");
+        #endif
         defaultJson = iFile.inifileString( fp, iniHeader, "defaultJson", "/MACHINE_STRUCT.json" );
         bool bOnOff= iFile.inifileBool( fp, iniHeader, "onoffinvert", false );
         if(bOnOff){
@@ -235,12 +247,16 @@ class MHandler {
 
 
       File jsonFile = SD.open(defaultJson);
-      if(!jsonFile) Serial.println("MH: Don't open file");
+      #ifdef MH_DEBUG
+        if(!jsonFile) Serial.println("MH: Don't open file");
+      #endif
       DynamicJsonDocument doc(4096);
       DeserializationError error = deserializeJson(doc, jsonFile);
       if (error) {
-        Serial.print(F("deserializeJson() failed: "));
-        Serial.println(error.f_str());
+        #ifdef MH_DEBUG
+          Serial.print(F("deserializeJson() failed: "));
+          Serial.println(error.f_str());
+        #endif
         return;
       }
       for (int i = 0; i < 4; i++) {
@@ -263,7 +279,7 @@ class MHandler {
 
     byte brancher(char * payload){ //this method set commands PC-ESP conversation
       if(strncmp(payload, "config_upload", 13)==0) return 1; //upload config from PC to ESP
-      if(strncmp(payload, "getms", 15)==0) return 2; //load config to PC from ESP "config_download"
+      if(strncmp(payload, "config_download", 15)==0) return 2; //load config to PC from ESP "config_download"
       if(strncmp(payload, "G", 1)==0) return 3; //gcode list
       if(strncmp(payload, "start_prg", 9)==0) return 4; //start saved program
       if(strncmp(payload, "save_prg", 8)==0) return 5; //save program to SD
@@ -310,8 +326,10 @@ class MHandler {
       while(dir){
         String line = "";
         numprg = validprg(dir.name());
-        //Serial.println(dir.name());
-        //Serial.println(numprg);
+        #ifdef MH_DEBUG
+          //Serial.println(dir.name());
+          //Serial.println(numprg);
+        #endif
         if(numprg>0){
           if(!dir.isDirectory()){
             while(dir.available()){
@@ -329,8 +347,10 @@ class MHandler {
       }
       dir.close();
       root.close();
-      //Serial.print("MH: ");
-      //Serial.print(result);
+      #ifdef MH_DEBUG
+        //Serial.print("MH: ");
+        //Serial.print(result);
+      #endif
       serializeJson(doc, result);
       return result;
     };
