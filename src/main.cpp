@@ -32,7 +32,6 @@
 Adafruit_MCP23X17 mcp[4];
 //File jsonFile;
 SoftwareSerial SWSerial;
-WebSocketsServer webSocket = WebSocketsServer(81);
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
@@ -80,23 +79,23 @@ void setup() {
     Serial.println("Main: WiFi was connected.)");
   #endif
   delay(1000);
-  
-  webSocket.begin();
-  webSocket.onEvent(webSocketEvent);
 
-  MH.begin();
+  MH.begin();  
+  MH.webSocket.begin();
+  MH.webSocket.onEvent(webSocketEvent);
+
+/*
   std::vector<int> a;
   std::vector<int>::iterator it = a.begin();
   a.push_back(0);
   a.pop_back();
   a.insert(a.end(), 3);
   it++;
+*/
 
 }
 
 void loop() {
-  webSocket.loop();
-  delay(10);
   MH.process();
   delay(10);
 }
@@ -156,7 +155,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         Serial.print(upload.substring(0, 10));
         Serial.println("\"");
       #endif
-      webSocket.broadcastTXT(upload);
+      MH.webSocket.broadcastTXT(upload);
       break;
     case WStype_BIN:      // Событие происходит при получении бинарных данных из webSocket
       // webSocket.sendBIN(num, payload, length);

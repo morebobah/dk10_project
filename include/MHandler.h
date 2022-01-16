@@ -11,6 +11,7 @@
 #include "Machine.h"
 #include "SoftwareSerial.h"
 #include "inifile.h"
+#include <WebSocketsServer.h> 
 
 extern HardwareSerial Serial;
 extern Adafruit_MCP23X17 mcp[4];
@@ -46,8 +47,6 @@ class MHandler {
     int printCnt = 0;
     File file_automatic; //pointer to current programm's file
     uint64_t time_alarm = 0; //Alarm will stop all machines for 5 minutes
-
-
     
     void stopallmotors(){
       for(std::vector<Machine*>::iterator it = M.begin(); it != M.end(); ++it){
@@ -179,8 +178,11 @@ class MHandler {
               Serial.println(agcode);
             #endif
             item_to_queue(agcode);
-            return "started";
+            return (this->sendAnswer(this->get_status()))? "inprogress" : "error";
           }else{
+            #ifdef MH_DEBUG
+              Serial.println("MH: program finished");
+            #endif
             return "prg_stop";
           }
       }else{
@@ -199,11 +201,27 @@ class MHandler {
             item_to_queue(this->gcode.substring(1, gcode.length()));
             this->gcode = "";
           }
-          return "started";
+          return (this->sendAnswer(this->get_status()))? "inprogress" : "error";
         }else{
+          #ifdef MH_DEBUG
+            Serial.println("MH: command finished");
+          #endif
           return "";
         }
       }
+    };
+
+    bool sendAnswer(String upload){
+      return webSocket.broadcastTXT(upload);
+    }
+
+    String get_status(){
+      String result;
+      DynamicJsonDocument doc(4096);
+      doc["status"][0]["machine"] = "0";
+      doc["status"][0]["motor"] = "0";
+      serializeJson(doc, result);
+      return result;
     };
 
     uint16_t validprg(String s){
@@ -249,6 +267,7 @@ class MHandler {
     };
   
   public:
+    WebSocketsServer webSocket = WebSocketsServer(81);
     MHandler(){};
 
     void resetIni(){
@@ -413,6 +432,7 @@ class MHandler {
     };
 
     void process(){
+      this->webSocket.loop();
       if(time_alarm>0){
         if((millis() - time_alarm)<300000){
             return;
