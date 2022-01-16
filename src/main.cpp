@@ -128,6 +128,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           break;
         case 4:
           Serial.println("Main: try to activated program from SD");
+          upload = MH.automatic((char*)payload);
           break;
         case 5:
           Serial.println("Main: try to save program to SD");
@@ -141,6 +142,9 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         case 8:
           Serial.println("Main: try to get list of programs");
           upload = MH.listofprg((char*)payload);
+          break;
+        case 9:
+          Serial.println("Main: stop all");
           break;
         default:
           Serial.println("Main: uncnown command");

@@ -44,6 +44,9 @@ class MHandler {
     std::vector<COMMAND> hand_queue;
     std::vector<COMMAND> auto_queue;
     int printCnt = 0;
+    File file_automatic; //pointer to current programm's file
+    uint64_t time_alarm = 0; //Alarm will stop all machines for 5 minutes
+
 
     
     void stopallmotors(){
@@ -169,24 +172,37 @@ class MHandler {
     };
 
     String next_command(){
-      if(this->gcode.length()>0){
-        int end_pos = 0;
-        #ifdef MH_DEBUG
-          Serial.print("MH: gcode=\"");
-          Serial.print(this->gcode);
-          Serial.println("\"");
-        #endif
-        end_pos = this->gcode.indexOf('G', 1);
-        if(end_pos>0){
-          item_to_queue(this->gcode.substring(1, end_pos));
-          this->gcode = this->gcode.substring(end_pos, gcode.length());
-        }else{
-          item_to_queue(this->gcode.substring(1, gcode.length()));
-          this->gcode = "";
-        }
-        return "started";
+      if(this->bauto){
+          if(this->file_automatic.available()){
+            String agcode = this->file_automatic.readStringUntil('G');
+            #ifdef MH_DEBUG
+              Serial.println(agcode);
+            #endif
+            item_to_queue(agcode);
+            return "started";
+          }else{
+            return "prg_stop";
+          }
       }else{
-        return "";
+        if(this->gcode.length()>0){
+          int end_pos = 0;
+          #ifdef MH_DEBUG
+            Serial.print("MH: gcode=\"");
+            Serial.print(this->gcode);
+            Serial.println("\"");
+          #endif
+          end_pos = this->gcode.indexOf('G', 1);
+          if(end_pos>0){
+            item_to_queue(this->gcode.substring(1, end_pos));
+            this->gcode = this->gcode.substring(end_pos, gcode.length());
+          }else{
+            item_to_queue(this->gcode.substring(1, gcode.length()));
+            this->gcode = "";
+          }
+          return "started";
+        }else{
+          return "";
+        }
       }
     };
 
@@ -202,6 +218,34 @@ class MHandler {
         pos++;
       }while(tmp_val!=255);
       return result;
+    };
+    
+    void inprogress(std::vector<COMMAND> &current_queue){
+      for(std::vector<COMMAND>::iterator it = current_queue.begin(); it != current_queue.end(); ++it){
+        switch((*it).type){
+          case 1:
+          if(((*it).time_start +  1000 * (*it).time)<millis() and current_queue.size()<2){
+            this->M.at((*it).machine)->at((*it).pin)->set_state((*it).value);
+            current_queue.pop_back();
+            this->next_command();
+          }
+          break;
+          case 2:
+            if((bool)((*it).value) == this->M.at((*it).machine)->at((*it).pin)->get_state()){
+              current_queue.erase(it);
+            }
+            break;
+          case 4:
+            int weight = ((Weigher *)(this->M.at((*it).machine)->at((*it).pin)))->getV();
+            if(weight>=(*it).value or weight<0){
+              current_queue.erase(it);
+            }
+            break;
+        }
+        if(current_queue.size()==0){
+          break;
+        }
+      }
     };
   
   public:
@@ -284,21 +328,34 @@ class MHandler {
       if(strncmp(payload, "start_prg", 9)==0) return 4; //start saved program
       if(strncmp(payload, "save_prg", 8)==0) return 5; //save program to SD
       if(strncmp(payload, "del_prg", 7)==0) return 6; //delete saved program
-      if(strncmp(payload, "get_list_prg", 12)==0) return 8; //get list of saved prog
       if(strncmp(payload, "restore_to_factory_settings[lDDQD]", 34)==0) return 7; //save blank ini file to SD card
+      if(strncmp(payload, "get_list_prg", 12)==0) return 8; //get list of saved prog
+      if(strncmp(payload, "alarm", 5)==0) {stopallmotors(); this->time_alarm = millis();} //save blank ini file to SD card
       return 0;
     }
 
     String handwork(String gcode){
+      if(this->bauto){
+        this->stopallmotors();
+        this->bauto = false;
+      }
       printCnt = 0;
-      stopallmotors();
       count_of_command = 0;
       this->gcode = gcode;
       return next_command();
     };
 
     String automatic(String gcode){
-      return "automatic";
+      String prgnum = gcode.substring(9);
+      if(prgnum.toInt()==0) return "Error";
+      String prgpath = "/prg[" + prgnum +"].json";
+      Serial.println(prgnum);
+      this->file_automatic = SD.open(prgpath);
+      if(!this->file_automatic.available()) return "Error";
+      this->stopallmotors();
+      this->file_automatic.readStringUntil('G');
+      this->bauto = true;
+      return this->next_command();
     };
 
     String config(String gcode=""){
@@ -356,21 +413,28 @@ class MHandler {
     };
 
     void process(){
+      if(time_alarm>0){
+        if((millis() - time_alarm)<300000){
+            return;
+          }
+      }
       if(this->bauto){
         if(this->auto_queue.size()>0){
-          Serial.println(auto_queue.size());
-          auto_queue.pop_back();
+          //Serial.println(auto_queue.size());
+          this->inprogress(this->auto_queue);
         }
       }else{
         if(this->hand_queue.size()>0){
+          this->inprogress(this->hand_queue);
+          /*
           for(std::vector<COMMAND>::iterator it = this->hand_queue.begin(); it != this->hand_queue.end(); ++it){
-            if(printCnt<1){Serial.println((*it).type);printCnt++;}
+            //if(printCnt<1){Serial.println((*it).type);printCnt++;}
             switch((*it).type){
               case 1:
                 if(((*it).time_start +  1000 * (*it).time)<millis() and this->hand_queue.size()<2){
                   this->M.at((*it).machine)->at((*it).pin)->set_state((*it).value);
                   this->hand_queue.pop_back();
-                  next_command();
+                  this->next_command();
                 }
                 break;
               case 2:
@@ -389,6 +453,7 @@ class MHandler {
               break;
             }
           }
+          */
         }
       }
     };
