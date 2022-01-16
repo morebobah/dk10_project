@@ -298,7 +298,11 @@ const messageHandler = event => {
             socket.onmessage = function(event) {
                 switch (brancher) {
                     case 1:
+                        brancher = 2;
                         refreshAuto(event.data);
+                        break;
+                    case 2:
+                        console.log('Обрыв соединения');
                         break;
                     default:
                         refreshPanel(event.data);
