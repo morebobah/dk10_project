@@ -18,6 +18,7 @@ extern Adafruit_MCP23X17 mcp[4];
 //extern File jsonFile;
 extern SoftwareSerial SWSerial;
 
+enum MCHN_STATUS{ stoped = 0, paused, inprocess, error };
 
 struct COMMAND{
     byte  type = 0; //use for weight from 1 to 254 kg, 0kg mean without weighter
@@ -47,6 +48,7 @@ class MHandler {
     int printCnt = 0;
     File file_automatic; //pointer to current programm's file
     uint64_t time_alarm = 0; //Alarm will stop all machines for 5 minutes
+    MCHN_STATUS status = MCHN_STATUS::stoped; //machine status 
     
     void stopallmotors(){
       for(std::vector<Machine*>::iterator it = M.begin(); it != M.end(); ++it){
@@ -171,6 +173,7 @@ class MHandler {
     };
 
     String next_command(){
+      if(this->status==MCHN_STATUS::paused)return (this->sendAnswer(this->get_status()))? "{'status':'2'}" : "{'status':'3'}";
       if(this->bauto){
           if(this->file_automatic.available()){
             String agcode = this->file_automatic.readStringUntil('G');
@@ -178,12 +181,15 @@ class MHandler {
               Serial.println(agcode);
             #endif
             item_to_queue(agcode);
-            return (this->sendAnswer(this->get_status()))? "inprogress" : "error";
+            return "";
           }else{
+            this->status = MCHN_STATUS::stoped;
+            this->sendAnswer(this->get_status());
             #ifdef MH_DEBUG
               Serial.println("MH: program finished");
             #endif
-            return "prg_stop";
+            this->status=MCHN_STATUS::stoped;
+            return "";
           }
       }else{
         if(this->gcode.length()>0){
@@ -201,8 +207,9 @@ class MHandler {
             item_to_queue(this->gcode.substring(1, gcode.length()));
             this->gcode = "";
           }
-          return (this->sendAnswer(this->get_status()))? "inprogress" : "error";
+          return "";
         }else{
+          this->sendAnswer(this->get_status());
           #ifdef MH_DEBUG
             Serial.println("MH: command finished");
           #endif
@@ -218,9 +225,20 @@ class MHandler {
     String get_status(){
       String result;
       DynamicJsonDocument doc(4096);
-      doc["status"][0]["machine"] = "0";
-      doc["status"][0]["motor"] = "0";
+      doc["status"] = this->status;
+      /*
+      for(std::vector<Machine*>::iterator it = M.begin(); it != M.end(); ++it){
+        doc["state"][(*it)->get_machinenum()]["machine"] = (*it)->get_machinenum();
+        std::vector<Pin *>  P = (*it)->pins();
+        for(std::vector<Pin*>::iterator pit = P.begin(); pit != P.end(); ++pit){
+          if((*pit)->get_type()!=SENSOR) continue;
+        }
+      };
+      */
       serializeJson(doc, result);
+      #ifdef MH_DEBUG 
+        Serial.println(result);
+      #endif
       return result;
     };
 
@@ -239,27 +257,47 @@ class MHandler {
     };
     
     void inprogress(std::vector<COMMAND> &current_queue){
+      String result;
+      bool bSend = false;
       for(std::vector<COMMAND>::iterator it = current_queue.begin(); it != current_queue.end(); ++it){
+        DynamicJsonDocument doc(4096);
+        doc["status"] = this->status;
+        doc["state"][0]["machine"] = (*it).machine;
+        doc["state"][0]["pins"][0]["pin"] = (*it).pin;
         switch((*it).type){
           case 1:
           if(((*it).time_start +  1000 * (*it).time)<millis() and current_queue.size()<2){
-            this->M.at((*it).machine)->at((*it).pin)->set_state((*it).value);
+            ((Motor *)this->M.at((*it).machine)->at((*it).pin))->set_state((*it).value);
+            doc["state"][0]["pins"][0]["type"] = "M";
+            doc["state"][0]["pins"][0]["value"] = ((Motor *)this->M.at((*it).machine)->at((*it).pin))->get_state();
+            bSend = true;
             current_queue.pop_back();
             this->next_command();
           }
           break;
           case 2:
             if((bool)((*it).value) == this->M.at((*it).machine)->at((*it).pin)->get_state()){
+              doc["state"][0]["pins"][0]["type"] = "S";
+              doc["state"][0]["pins"][0]["value"] = this->M.at((*it).machine)->at((*it).pin)->get_state();
+              bSend = true;
               current_queue.erase(it);
             }
             break;
           case 4:
             int weight = ((Weigher *)(this->M.at((*it).machine)->at((*it).pin)))->getV();
+            doc["state"][0]["pins"][0]["type"] = "W";
+            doc["state"][0]["pins"][0]["value"] = weight;
+            bSend = true;
             if(weight>=(*it).value or weight<0){
               current_queue.erase(it);
             }
             break;
         }
+        if(bSend){
+          serializeJson(doc, result);
+          sendAnswer(result);
+        }
+        bSend = false;
         if(current_queue.size()==0){
           break;
         }
@@ -322,8 +360,8 @@ class MHandler {
         #endif
         return;
       }
-      for (int i = 0; i < 4; i++) {
-        M.push_back(new Machine ());
+      for (uint8_t i = 0; i < 4; i++) {
+        M.push_back(new Machine (i));
         JsonObject MACHINE_item = doc["MACHINE"][i];
         for(JsonObject MACHINE_PINS_item : MACHINE_item["PINS"].as<JsonArray>()){
           String s = MACHINE_PINS_item["PINTYPE"];
@@ -342,38 +380,82 @@ class MHandler {
 
     byte brancher(char * payload){ //this method set commands PC-ESP conversation
       if(strncmp(payload, "config_upload", 13)==0) return 1; //upload config from PC to ESP
-      if(strncmp(payload, "config_download", 15)==0) return 2; //load config to PC from ESP "config_download"
-      if(strncmp(payload, "G", 1)==0) return 3; //gcode list
-      if(strncmp(payload, "start_prg", 9)==0) return 4; //start saved program
+
+      //load config to PC from ESP "config_download"
+      if(strncmp(payload, "config_download", 15)==0){
+        if(this->sendAnswer(this->config())) return 0;
+        return 2;
+      }
+
+      //gcode list
+      if(strncmp(payload, "G", 1)==0){
+        this->handwork((char*)payload);
+        return 0;
+      }
+
+      //start saved program
+      if(strncmp(payload, "start_prg", 9)==0){
+        if(this->status!=MCHN_STATUS::stoped) return 4;
+        this->automatic((char*)payload);
+        return 0; 
+      }
+
       if(strncmp(payload, "save_prg", 8)==0) return 5; //save program to SD
       if(strncmp(payload, "del_prg", 7)==0) return 6; //delete saved program
       if(strncmp(payload, "restore_to_factory_settings[lDDQD]", 34)==0) return 7; //save blank ini file to SD card
-      if(strncmp(payload, "get_list_prg", 12)==0) return 8; //get list of saved prog
-      if(strncmp(payload, "alarm", 5)==0) {stopallmotors(); this->time_alarm = millis();} //save blank ini file to SD card
+
+      //get list of saved prog
+      if(strncmp(payload, "get_list_prg", 12)==0){
+        if(this->sendAnswer(this->listofprg((char*)payload))) return 0;
+        return 8; 
+      }
+
+      if(strncmp(payload, "alarm", 5)==0) {stopallmotors(); this->time_alarm = millis();} //stop all motors for 5 minutes
+
+      //pause current program
+      if(strncmp(payload, "pause_prg", 9)==0){ 
+        if(this->status==MCHN_STATUS::inprocess) this->status=MCHN_STATUS::paused;
+        this->sendAnswer(this->get_status());
+        return 9;
+      }
+
+      //stop current program
+      if(strncmp(payload, "stop_prg", 8)==0){ 
+        if(this->status==MCHN_STATUS::inprocess || this->status==MCHN_STATUS::paused){
+          this->file_automatic.close();
+          this->status=MCHN_STATUS::stoped;
+          this->sendAnswer(this->get_status());
+        }
+        return 10; 
+      }
+      if(strncmp(payload, "continue_prg", 12)==0) return 11; //continue paused program
       return 0;
     }
 
     String handwork(String gcode){
+      if(this->status==MCHN_STATUS::inprocess) return this->get_status();
       if(this->bauto){
-        this->stopallmotors();
         this->bauto = false;
       }
       printCnt = 0;
       count_of_command = 0;
       this->gcode = gcode;
-      return next_command();
+      return this->next_command();
     };
 
     String automatic(String gcode){
       String prgnum = gcode.substring(9);
       if(prgnum.toInt()==0) return "Error";
       String prgpath = "/prg[" + prgnum +"].json";
-      Serial.println(prgnum);
+      #ifdef MH_DEBUG
+        Serial.println(prgnum);
+      #endif
       this->file_automatic = SD.open(prgpath);
       if(!this->file_automatic.available()) return "Error";
       this->stopallmotors();
       this->file_automatic.readStringUntil('G');
       this->bauto = true;
+      this->status = MCHN_STATUS::inprocess;
       return this->next_command();
     };
 

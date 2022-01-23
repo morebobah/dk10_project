@@ -114,48 +114,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         Serial.println("Main: Text recived");
         Serial.println((char*)payload);
       #endif
-      switch (MH.brancher((char*)payload)) {
-        case 1:
-        Serial.println("Main: try to activated set config command");
-        case 2:
-         Serial.println("Main: try to activated get config command");
-          upload = MH.config();
-          break;
-        case 3:
-        Serial.println("Main: try to activated gcode");
-          upload = MH.handwork((char*)payload);
-          break;
-        case 4:
-          Serial.println("Main: try to activated program from SD");
-          upload = MH.automatic((char*)payload);
-          break;
-        case 5:
-          Serial.println("Main: try to save program to SD");
-          break;
-        case 6:
-          Serial.println("Main: try to delete program from SD");
-          break;
-        case 7:
-          Serial.println("Main: try to restore to factory settigs");
-          break;
-        case 8:
-          Serial.println("Main: try to get list of programs");
-          upload = MH.listofprg((char*)payload);
-          break;
-        case 9:
-          Serial.println("Main: stop all");
-          break;
-        default:
-          Serial.println("Main: uncnown command");
-          break;
-        break;
-      }
-      #ifdef MAIN_DEBUG
-        Serial.print("Main: send to PC \"");
-        Serial.print(upload.substring(0, 10));
-        Serial.println("\"");
-      #endif
-      MH.webSocket.broadcastTXT(upload);
+      MH.brancher((char*)payload);
+      //MH.webSocket.broadcastTXT(upload);
       break;
     case WStype_BIN:      // Событие происходит при получении бинарных данных из webSocket
       // webSocket.sendBIN(num, payload, length);

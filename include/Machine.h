@@ -16,12 +16,14 @@ extern Adafruit_MCP23X17 mcp[4];
 class Machine {
   private:
     std::vector<Pin *>  P;
+    uint8_t machine_num;
     //Pin **P;
 
   public:
     int m_pins_col;
     
-    Machine (){
+    Machine (uint8_t m=0){
+      this->machine_num = m;
       this->m_pins_col = 0;
 
       //P = new Pin*[1];
@@ -58,6 +60,14 @@ class Machine {
 
     Pin *at(uint8_t id){
       return P.at(id);
+    };
+
+    uint8_t get_machinenum(){
+      return this->machine_num;
+    };
+
+    std::vector<Pin *> pins(){
+      return P;
     };
 
 };
