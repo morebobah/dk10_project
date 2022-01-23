@@ -404,6 +404,37 @@ void MachineWindow::SetUIMessageBroker()
             m_tabs.at(m_activeTabId)->m_contentWebView->ExecuteScript(L"initSocket()", m_uiScriptExecutor.Get());
         }
         break;
+        case MG_DIRECT_SWITCHER:
+        {
+            //MessageBox(NULL, L"Init connection", L"Socket", MB_OK);
+            web::json::value jsonSnd = web::json::value::parse(L"{}");
+            jsonSnd[L"message"] = web::json::value(MG_DIRECT_SWITCHER);
+            jsonSnd[L"args"] = jsonObj.at(L"args");
+            PostJsonToWebView(jsonSnd, m_tabs.at(m_activeTabId)->m_contentWebView.Get());
+            //PostJsonToWebView(jsonSnd, m_controlsWebView.Get());
+        }
+        break;
+        case MG_SEND_GCODE:
+        {
+            m_tabs.at(m_activeTabId)->m_contentWebView->ExecuteScript(L"sendgcode()", m_uiScriptExecutor.Get());
+        }
+        break;
+        case MG_CLEAR_LIST:
+        {
+            if (MessageBox(m_hWnd, L"This operation will clear all of program commands.\nDo you want complete it?", L"Clearing program", MB_OKCANCEL) == IDOK) {
+                web::json::value jsonSnd = web::json::value::parse(L"{}");
+                jsonSnd[L"message"] = web::json::value(MG_CLEAR_LIST);
+                jsonSnd[L"args"] = jsonObj.at(L"args");
+                PostJsonToWebView(jsonSnd, m_tabs.at(m_activeTabId)->m_contentWebView.Get());
+            }
+            //web::json::value jsonSnd = web::json::value::parse(L"{}");
+            //jsonSnd[L"message"] = web::json::value(MG_DIRECT_SWITCHER);
+            //jsonSnd[L"args"] = jsonObj.at(L"args");
+            //PostJsonToWebView(jsonSnd, m_tabs.at(m_activeTabId)->m_contentWebView.Get());
+            //PostJsonToWebView(jsonSnd, m_controlsWebView.Get());
+            //m_tabs.at(m_activeTabId)->m_contentWebView->ExecuteScript(L"sendgcode()", m_uiScriptExecutor.Get());
+        }
+        break;
         default:
         {
             OutputDebugString(L"Unexpected message\n");
@@ -524,6 +555,16 @@ HRESULT MachineWindow::ConnectionEstablished(Microsoft::WRL::ComPtr<ICoreWebView
 {
     web::json::value jsonSnd = web::json::value::parse(L"{}");
     jsonSnd[L"message"] = web::json::value(MG_SOCKET_ESTABLISHED);
+    jsonSnd[L"args"] = jsonObj.at(L"args");
+    PostJsonToWebView(jsonSnd, m_contentWebView.Get());
+    PostJsonToWebView(jsonSnd, m_controlsWebView.Get());
+    return S_OK;
+}
+
+HRESULT MachineWindow::SocketDisconnect(Microsoft::WRL::ComPtr<ICoreWebView2> m_contentWebView, web::json::value jsonObj)
+{
+    web::json::value jsonSnd = web::json::value::parse(L"{}");
+    jsonSnd[L"message"] = web::json::value(MG_SOCKET_DISCONNECT);
     jsonSnd[L"args"] = jsonObj.at(L"args");
     PostJsonToWebView(jsonSnd, m_contentWebView.Get());
     PostJsonToWebView(jsonSnd, m_controlsWebView.Get());

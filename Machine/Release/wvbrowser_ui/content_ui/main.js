@@ -8,7 +8,7 @@ var ipAddr = null;
 var gcode = '';
 var bDirect = true;
 var sended = ' sended';
-var brancher = 0;
+let timerId = 0;
 
 /*
 
@@ -285,6 +285,9 @@ const messageHandler = event => {
                     args: {}
                 };
                 window.chrome.webview.postMessage(message);
+                timerId = setInterval(() => {
+                    sendText('c');
+                }, 30000);
             };
             socket.onclose = function(event) {
                 if (event.wasClean) {
@@ -292,28 +295,39 @@ const messageHandler = event => {
                 } else {
                     console.log('Обрыв соединения'); // например, "убит" процесс сервера
                 }
-                brancher = 0;
                 console.log('Код: ' + event.code + ' причина: ' + event.reason);
+                var message = {
+                    message: commands.MG_SOCKET_DISCONNECT,
+                    args: {}
+                };
+                window.chrome.webview.postMessage(message);
             };
             socket.onmessage = function(event) {
-                switch (brancher) {
-                    case 1:
-                        brancher = 2;
-                        refreshAuto(event.data);
-                        break;
-                    case 2:
-                        console.log('Обрыв соединения');
-                        break;
-                    default:
-                        refreshPanel(event.data);
-                        brancher = 1;
-                        sendText("get_list_prg");
+                var objJSON = $.parseJSON(event.data);
+                var keys = Object.keys(objJSON);
+                if (keys.includes("MACHINE")) {
+                    refreshPanel(objJSON);
+                    sendText("get_list_prg");
+                }
+                if (keys.includes("program")) refreshAuto(objJSON);
+                if (keys.includes("status")) {
+                    document.getElementById('recordsBar').innerHTML += event.data;
                 }
             };
             break;
         case commands.MG_SOCKET_ESTABLISHED:
             sendText("config_download");
-            brancher = 0;
+            break;
+        case commands.MG_SOCKET_DISCONNECT:
+            let ctrlBar = document.getElementById('apanel');
+            if (ctrlBar) {
+                ctrlBar.remove();
+            }
+            ctrlBar = document.getElementById('panel');
+            if (ctrlBar) {
+                ctrlBar.remove();
+            }
+            clearInterval(timerId);
             break;
         case commands.MG_DIRECT_SWITCHER:
             bDirect = !bDirect;
@@ -327,8 +341,7 @@ const messageHandler = event => {
     }
 }
 
-function refreshAuto(data) {
-    var objJSON = $.parseJSON(data);
+function refreshAuto(objJSON) {
     var keys = Object.keys(objJSON);
     let ctrlBar = document.getElementById('apanel');
     if (ctrlBar) {
@@ -443,6 +456,7 @@ function refreshAuto(data) {
         });
 
         sendText(gcode);
+        gcode = '';
     });
 
     ctrlBar.append(mainpanel);
@@ -461,8 +475,8 @@ function refreshRecord() {
 
 }
 
-function refreshPanel(data) {
-    var objJSON = $.parseJSON(data);
+function refreshPanel(objJSON) {
+    //var objJSON = $.parseJSON(data);
     var keys = Object.keys(objJSON);
     if (keys.length == 0) {
         console.log(`JSON wrong during MACHINE create!`);
@@ -733,6 +747,10 @@ function init() {
         e.preventDefault();
     });
     */
+    document.addEventListener("keydown", function(e) {
+        if (e.key === 'Escape') sendgcode('alarm');
+        document.body.disabled = true;
+    });
 
     //let viewportItemsCapacity = Math.round(window.innerHeight / itemHeight);
     //addUIListeners();

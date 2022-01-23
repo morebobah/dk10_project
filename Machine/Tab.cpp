@@ -89,6 +89,13 @@ void Tab::SetMessageBroker()
             //m_contentWebView->ExecuteScript(L"initSocket()", m_uiScriptExecutor.Get());
         }
         break;
+        case MG_SOCKET_DISCONNECT:
+        {
+            machineWindow->SocketDisconnect(m_contentWebView, jsonObj);
+            //MessageBox(NULL, L"Connection established", L"Socket", MB_OK);
+            //m_contentWebView->ExecuteScript(L"initSocket()", m_uiScriptExecutor.Get());
+        }
+        break;
         default:
         {
             OutputDebugString(L"Unexpected message\n");

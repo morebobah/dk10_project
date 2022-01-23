@@ -84,8 +84,14 @@ const messageHandler = event => {
             closeWindow();
             break;
         case commands.MG_SOCKET_ESTABLISHED:
+            window.localStorage.setItem('IPAddr', document.getElementById('ip-field').value);
+            window.localStorage.setItem('IPPort', document.getElementById('port-field').value);
             document.getElementById('ip-field').setAttribute("disabled", true);
             document.getElementById('port-field').setAttribute("disabled", true);
+            break;
+        case commands.MG_SOCKET_DISCONNECT:
+            document.getElementById('ip-field').removeAttribute("disabled");
+            document.getElementById('port-field').removeAttribute("disabled");
             break;
         default:
             console.log(`Received unexpected message: ${JSON.stringify(event.data)}`);
@@ -213,7 +219,7 @@ function refreshControls() {
     ipInput.id = 'ip-field';
     ipInput.placeholder = 'IP address';
     ipInput.type = 'text';
-    ipInput.value = '192.168.1.53';
+    ipInput.value = window.localStorage.getItem('IPAddr') || '192.168.1.0';
     ipInput.spellcheck = false;
     addressBar.append(ipInput);
 
@@ -221,7 +227,7 @@ function refreshControls() {
     portInput.id = 'port-field';
     portInput.placeholder = 'Port number';
     portInput.type = 'text';
-    portInput.value = '81';
+    portInput.value = window.localStorage.getItem('IPPort') || '80';
     portInput.spellcheck = false;
     addressBar.append(portInput);
 
