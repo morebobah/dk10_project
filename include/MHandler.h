@@ -172,8 +172,8 @@ class MHandler {
       return "";
     };
 
-    String next_command(){
-      if(this->status==MCHN_STATUS::paused)return (this->sendAnswer(this->get_status()))? "{'status':'2'}" : "{'status':'3'}";
+    bool next_command(){
+      if(this->status==MCHN_STATUS::paused)return this->sendAnswer(this->get_status());
       if(this->bauto){
           if(this->file_automatic.available()){
             String agcode = this->file_automatic.readStringUntil('G');
@@ -181,7 +181,7 @@ class MHandler {
               Serial.println(agcode);
             #endif
             item_to_queue(agcode);
-            return "";
+            return true;
           }else{
             this->status = MCHN_STATUS::stoped;
             this->sendAnswer(this->get_status());
@@ -189,7 +189,7 @@ class MHandler {
               Serial.println("MH: program finished");
             #endif
             this->status=MCHN_STATUS::stoped;
-            return "";
+            return true;
           }
       }else{
         if(this->gcode.length()>0){
@@ -207,13 +207,13 @@ class MHandler {
             item_to_queue(this->gcode.substring(1, gcode.length()));
             this->gcode = "";
           }
-          return "";
+          return true;
         }else{
-          this->sendAnswer(this->get_status());
+          //this->sendAnswer(this->get_status());
           #ifdef MH_DEBUG
             Serial.println("MH: command finished");
           #endif
-          return "";
+          return true;
         }
       }
     };
@@ -223,18 +223,27 @@ class MHandler {
     }
 
     String get_status(){
-      String result;
+      String result = "MSW";
       DynamicJsonDocument doc(4096);
       doc["status"] = this->status;
-      /*
       for(std::vector<Machine*>::iterator it = M.begin(); it != M.end(); ++it){
-        doc["state"][(*it)->get_machinenum()]["machine"] = (*it)->get_machinenum();
+        uint8_t mchnum = (*it)->get_machinenum();
+        doc["state"][mchnum]["machine"] = mchnum;
         std::vector<Pin *>  P = (*it)->pins();
+        uint8_t ipin = 0;
         for(std::vector<Pin*>::iterator pit = P.begin(); pit != P.end(); ++pit){
-          if((*pit)->get_type()!=SENSOR) continue;
+          doc["state"][mchnum]["pins"][ipin]["pin"] = (*pit)->get_pin();
+          uint8_t tpin = (*pit)->get_type();
+          doc["state"][mchnum]["pins"][ipin]["type"] = result.substring(tpin, tpin + 1);
+          if(tpin==WEIGHER){
+            doc["state"][mchnum]["pins"][ipin]["value"] = ((Weigher *)(*pit))->getV();
+          }else{
+            doc["state"][mchnum]["pins"][ipin]["value"] = (*pit)->get_state();
+          }
+          ipin++;
         }
       };
-      */
+      result = "";
       serializeJson(doc, result);
       #ifdef MH_DEBUG 
         Serial.println(result);
@@ -267,9 +276,9 @@ class MHandler {
         switch((*it).type){
           case 1:
           if(((*it).time_start +  1000 * (*it).time)<millis() and current_queue.size()<2){
-            ((Motor *)this->M.at((*it).machine)->at((*it).pin))->set_state((*it).value);
+            this->M.at((*it).machine)->at((*it).pin)->set_state((*it).value);
             doc["state"][0]["pins"][0]["type"] = "M";
-            doc["state"][0]["pins"][0]["value"] = ((Motor *)this->M.at((*it).machine)->at((*it).pin))->get_state();
+            doc["state"][0]["pins"][0]["value"] = this->M.at((*it).machine)->at((*it).pin)->get_state();
             bSend = true;
             current_queue.pop_back();
             this->next_command();
@@ -430,10 +439,15 @@ class MHandler {
       }
       if(strncmp(payload, "continue_prg", 12)==0) return 11; //continue paused program
       return 0;
+
+      //read status
+      if(strncmp(payload, "status", 6)==0){
+        this->sendAnswer(this->get_status());
+      }
     }
 
-    String handwork(String gcode){
-      if(this->status==MCHN_STATUS::inprocess) return this->get_status();
+    bool handwork(String gcode){
+      if(this->status==MCHN_STATUS::inprocess) return false;
       if(this->bauto){
         this->bauto = false;
       }
@@ -443,15 +457,15 @@ class MHandler {
       return this->next_command();
     };
 
-    String automatic(String gcode){
+    bool automatic(String gcode){
       String prgnum = gcode.substring(9);
-      if(prgnum.toInt()==0) return "Error";
+      if(prgnum.toInt()==0) return false;
       String prgpath = "/prg[" + prgnum +"].json";
       #ifdef MH_DEBUG
         Serial.println(prgnum);
       #endif
       this->file_automatic = SD.open(prgpath);
-      if(!this->file_automatic.available()) return "Error";
+      if(!this->file_automatic.available()) return false;
       this->stopallmotors();
       this->file_automatic.readStringUntil('G');
       this->bauto = true;
