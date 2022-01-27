@@ -270,7 +270,6 @@ class MHandler {
       bool bSend = false;
       for(std::vector<COMMAND>::iterator it = current_queue.begin(); it != current_queue.end(); ++it){
         DynamicJsonDocument doc(4096);
-        doc["status"] = this->status;
         doc["state"][0]["machine"] = (*it).machine;
         doc["state"][0]["pins"][0]["pin"] = (*it).pin;
         switch((*it).type){
@@ -303,6 +302,7 @@ class MHandler {
             break;
         }
         if(bSend){
+          doc["status"] = this->status;
           serializeJson(doc, result);
           sendAnswer(result);
         }
@@ -437,14 +437,20 @@ class MHandler {
         }
         return 10; 
       }
-      if(strncmp(payload, "continue_prg", 12)==0) return 11; //continue paused program
-      return 0;
+
+      if(strncmp(payload, "continue_prg", 12)==0){
+        this->status=MCHN_STATUS::inprocess;
+        this->next_command();
+        return 12;
+      }
 
       //read status
       if(strncmp(payload, "status", 6)==0){
         this->sendAnswer(this->get_status());
+        return 13;
       }
-    }
+      return 0;
+    };
 
     bool handwork(String gcode){
       if(this->status==MCHN_STATUS::inprocess) return false;
