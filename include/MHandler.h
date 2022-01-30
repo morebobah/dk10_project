@@ -11,12 +11,14 @@
 #include "Machine.h"
 #include "SoftwareSerial.h"
 #include "inifile.h"
+#include <WebSocketsServer.h> 
 
 extern HardwareSerial Serial;
 extern Adafruit_MCP23X17 mcp[4];
 //extern File jsonFile;
 extern SoftwareSerial SWSerial;
 
+enum MCHN_STATUS{ stoped = 0, paused, inprocess, error };
 
 struct COMMAND{
     byte  type = 0; //use for weight from 1 to 254 kg, 0kg mean without weighter
@@ -44,7 +46,9 @@ class MHandler {
     std::vector<COMMAND> hand_queue;
     std::vector<COMMAND> auto_queue;
     int printCnt = 0;
-
+    File file_automatic; //pointer to current programm's file
+    uint64_t time_alarm = 0; //Alarm will stop all machines for 5 minutes
+    MCHN_STATUS status = MCHN_STATUS::stoped; //machine status 
     
     void stopallmotors(){
       for(std::vector<Machine*>::iterator it = M.begin(); it != M.end(); ++it){
@@ -97,9 +101,11 @@ class MHandler {
     };
     
     String item_to_queue(String gcode){
-      Serial.print("MH: clear code=\"");
-      Serial.print(gcode);
-      Serial.println("\"");
+      #ifdef MH_DEBUG
+        Serial.print("MH: clear code=\"");
+        Serial.print(gcode);
+        Serial.println("\"");
+      #endif
       COMMAND tmp_command;
       unsigned int pre_time = 0;
       unsigned int pre_val = 0;
@@ -166,24 +172,83 @@ class MHandler {
       return "";
     };
 
-    String next_command(){
-      if(this->gcode.length()>0){
-        int end_pos = 0;
-        Serial.print("MH: gcode=\"");
-        Serial.print(this->gcode);
-        Serial.println("\"");
-        end_pos = this->gcode.indexOf('G', 1);
-        if(end_pos>0){
-          item_to_queue(this->gcode.substring(1, end_pos));
-          this->gcode = this->gcode.substring(end_pos, gcode.length());
-        }else{
-          item_to_queue(this->gcode.substring(1, gcode.length()));
-          this->gcode = "";
-        }
-        return "started";
+    bool next_command(){
+      if(this->status==MCHN_STATUS::paused)return this->sendAnswer(this->get_status());
+      if(this->bauto){
+          if(this->file_automatic.available()){
+            String agcode = this->file_automatic.readStringUntil('G');
+            #ifdef MH_DEBUG
+              Serial.println(agcode);
+            #endif
+            item_to_queue(agcode);
+            return true;
+          }else{
+            this->status = MCHN_STATUS::stoped;
+            this->sendAnswer(this->get_status());
+            #ifdef MH_DEBUG
+              Serial.println("MH: program finished");
+            #endif
+            this->status=MCHN_STATUS::stoped;
+            return true;
+          }
       }else{
-        return "";
+        if(this->gcode.length()>0){
+          int end_pos = 0;
+          #ifdef MH_DEBUG
+            Serial.print("MH: gcode=\"");
+            Serial.print(this->gcode);
+            Serial.println("\"");
+          #endif
+          end_pos = this->gcode.indexOf('G', 1);
+          if(end_pos>0){
+            item_to_queue(this->gcode.substring(1, end_pos));
+            this->gcode = this->gcode.substring(end_pos, gcode.length());
+          }else{
+            item_to_queue(this->gcode.substring(1, gcode.length()));
+            this->gcode = "";
+          }
+          return true;
+        }else{
+          //this->sendAnswer(this->get_status());
+          #ifdef MH_DEBUG
+            Serial.println("MH: command finished");
+          #endif
+          return true;
+        }
       }
+    };
+
+    bool sendAnswer(String upload){
+      return webSocket.broadcastTXT(upload);
+    }
+
+    String get_status(){
+      String result = "MSW";
+      DynamicJsonDocument doc(4096);
+      doc["status"] = this->status;
+      for(std::vector<Machine*>::iterator it = M.begin(); it != M.end(); ++it){
+        uint8_t mchnum = (*it)->get_machinenum();
+        doc["state"][mchnum]["machine"] = mchnum;
+        std::vector<Pin *>  P = (*it)->pins();
+        uint8_t ipin = 0;
+        for(std::vector<Pin*>::iterator pit = P.begin(); pit != P.end(); ++pit){
+          doc["state"][mchnum]["pins"][ipin]["pin"] = (*pit)->get_pin();
+          uint8_t tpin = (*pit)->get_type();
+          doc["state"][mchnum]["pins"][ipin]["type"] = result.substring(tpin, tpin + 1);
+          if(tpin==WEIGHER){
+            doc["state"][mchnum]["pins"][ipin]["value"] = ((Weigher *)(*pit))->getV();
+          }else{
+            doc["state"][mchnum]["pins"][ipin]["value"] = (*pit)->get_state();
+          }
+          ipin++;
+        }
+      };
+      result = "";
+      serializeJson(doc, result);
+      #ifdef MH_DEBUG 
+        Serial.println(result);
+      #endif
+      return result;
     };
 
     uint16_t validprg(String s){
@@ -199,15 +264,68 @@ class MHandler {
       }while(tmp_val!=255);
       return result;
     };
+    
+    void inprogress(std::vector<COMMAND> &current_queue){
+      String result;
+      bool bSend = false;
+      for(std::vector<COMMAND>::iterator it = current_queue.begin(); it != current_queue.end(); ++it){
+        DynamicJsonDocument doc(4096);
+        doc["state"][0]["machine"] = (*it).machine;
+        doc["state"][0]["pins"][0]["pin"] = (*it).pin;
+        switch((*it).type){
+          case 1:
+          if(((*it).time_start +  1000 * (*it).time)<millis() and current_queue.size()<2){
+            this->M.at((*it).machine)->at((*it).pin)->set_state((*it).value);
+            doc["state"][0]["pins"][0]["type"] = "M";
+            doc["state"][0]["pins"][0]["value"] = this->M.at((*it).machine)->at((*it).pin)->get_state();
+            bSend = true;
+            current_queue.pop_back();
+            this->next_command();
+          }
+          break;
+          case 2:
+            if((bool)((*it).value) == this->M.at((*it).machine)->at((*it).pin)->get_state()){
+              doc["state"][0]["pins"][0]["type"] = "S";
+              doc["state"][0]["pins"][0]["value"] = this->M.at((*it).machine)->at((*it).pin)->get_state();
+              bSend = true;
+              current_queue.erase(it);
+            }
+            break;
+          case 4:
+            int weight = ((Weigher *)(this->M.at((*it).machine)->at((*it).pin)))->getV();
+            doc["state"][0]["pins"][0]["type"] = "W";
+            doc["state"][0]["pins"][0]["value"] = weight;
+            bSend = true;
+            if(weight>=(*it).value or weight<0){
+              current_queue.erase(it);
+            }
+            break;
+        }
+        if(bSend){
+          doc["status"] = this->status;
+          serializeJson(doc, result);
+          sendAnswer(result);
+        }
+        bSend = false;
+        if(current_queue.size()==0){
+          break;
+        }
+      }
+    };
   
   public:
+    WebSocketsServer webSocket = WebSocketsServer(81);
     MHandler(){};
 
     void resetIni(){
       File fp = SD.open( iniFileName, "w" );
-      Serial.println("MH: create new ini");
+      #ifdef MH_DEBUG
+        Serial.println("MH: create new ini");
+      #endif
       if(fp){
-        Serial.println("MH: file created");
+        #ifdef MH_DEBUG
+          Serial.println("MH: file created");
+        #endif
         fp.write("[HEADER]\n");
         fp.write("defaultJson=/MACHINE_STRUCT.json\n");
         fp.write("onoffinvert=true\n");
@@ -216,12 +334,16 @@ class MHandler {
     };
 
     void begin(){
-      char * iniHeader = "HEADER";
+      String iniHeader("HEADER");
       iniFile iFile;
       File fp = SD.open( iniFileName, "r" );
-      Serial.println(fp);
+      #ifdef MH_DEBUG
+        Serial.println(fp);
+      #endif
       if(fp){
-        Serial.println("MH: ini opened");
+        #ifdef MH_DEBUG
+          Serial.println("MH: ini opened");
+        #endif
         defaultJson = iFile.inifileString( fp, iniHeader, "defaultJson", "/MACHINE_STRUCT.json" );
         bool bOnOff= iFile.inifileBool( fp, iniHeader, "onoffinvert", false );
         if(bOnOff){
@@ -235,16 +357,20 @@ class MHandler {
 
 
       File jsonFile = SD.open(defaultJson);
-      if(!jsonFile) Serial.println("MH: Don't open file");
+      #ifdef MH_DEBUG
+        if(!jsonFile) Serial.println("MH: Don't open file");
+      #endif
       DynamicJsonDocument doc(4096);
       DeserializationError error = deserializeJson(doc, jsonFile);
       if (error) {
-        Serial.print(F("deserializeJson() failed: "));
-        Serial.println(error.f_str());
+        #ifdef MH_DEBUG
+          Serial.print(F("deserializeJson() failed: "));
+          Serial.println(error.f_str());
+        #endif
         return;
       }
-      for (int i = 0; i < 4; i++) {
-        M.push_back(new Machine ());
+      for (uint8_t i = 0; i < 4; i++) {
+        M.push_back(new Machine (i));
         JsonObject MACHINE_item = doc["MACHINE"][i];
         for(JsonObject MACHINE_PINS_item : MACHINE_item["PINS"].as<JsonArray>()){
           String s = MACHINE_PINS_item["PINTYPE"];
@@ -263,26 +389,94 @@ class MHandler {
 
     byte brancher(char * payload){ //this method set commands PC-ESP conversation
       if(strncmp(payload, "config_upload", 13)==0) return 1; //upload config from PC to ESP
-      if(strncmp(payload, "getms", 15)==0) return 2; //load config to PC from ESP "config_download"
-      if(strncmp(payload, "G", 1)==0) return 3; //gcode list
-      if(strncmp(payload, "start_prg", 9)==0) return 4; //start saved program
+
+      //load config to PC from ESP "config_download"
+      if(strncmp(payload, "config_download", 15)==0){
+        if(this->sendAnswer(this->config())) return 0;
+        return 2;
+      }
+
+      //gcode list
+      if(strncmp(payload, "G", 1)==0){
+        this->handwork((char*)payload);
+        return 0;
+      }
+
+      //start saved program
+      if(strncmp(payload, "start_prg", 9)==0){
+        if(this->status!=MCHN_STATUS::stoped) return 4;
+        this->automatic((char*)payload);
+        return 0; 
+      }
+
       if(strncmp(payload, "save_prg", 8)==0) return 5; //save program to SD
       if(strncmp(payload, "del_prg", 7)==0) return 6; //delete saved program
-      if(strncmp(payload, "get_list_prg", 12)==0) return 8; //get list of saved prog
       if(strncmp(payload, "restore_to_factory_settings[lDDQD]", 34)==0) return 7; //save blank ini file to SD card
-      return 0;
-    }
 
-    String handwork(String gcode){
-      printCnt = 0;
-      stopallmotors();
-      count_of_command = 0;
-      this->gcode = gcode;
-      return next_command();
+      //get list of saved prog
+      if(strncmp(payload, "get_list_prg", 12)==0){
+        if(this->sendAnswer(this->listofprg((char*)payload))) return 0;
+        return 8; 
+      }
+
+      if(strncmp(payload, "alarm", 5)==0) {stopallmotors(); this->time_alarm = millis();} //stop all motors for 5 minutes
+
+      //pause current program
+      if(strncmp(payload, "pause_prg", 9)==0){ 
+        if(this->status==MCHN_STATUS::inprocess) this->status=MCHN_STATUS::paused;
+        this->sendAnswer(this->get_status());
+        return 9;
+      }
+
+      //stop current program
+      if(strncmp(payload, "stop_prg", 8)==0){ 
+        if(this->status==MCHN_STATUS::inprocess || this->status==MCHN_STATUS::paused){
+          this->file_automatic.close();
+          this->status=MCHN_STATUS::stoped;
+          this->sendAnswer(this->get_status());
+        }
+        return 10; 
+      }
+
+      if(strncmp(payload, "continue_prg", 12)==0){
+        this->status=MCHN_STATUS::inprocess;
+        this->next_command();
+        return 12;
+      }
+
+      //read status
+      if(strncmp(payload, "status", 6)==0){
+        this->sendAnswer(this->get_status());
+        return 13;
+      }
+      return 0;
     };
 
-    String automatic(String gcode){
-      return "automatic";
+    bool handwork(String gcode){
+      if(this->status==MCHN_STATUS::inprocess) return false;
+      if(this->bauto){
+        this->bauto = false;
+      }
+      printCnt = 0;
+      count_of_command = 0;
+      this->gcode = gcode;
+      return this->next_command();
+    };
+
+    bool automatic(String gcode){
+      String prgnum = gcode.substring(9);
+      if(prgnum.toInt()==0) return false;
+      String prgpath = "/prg[" + prgnum +"].json";
+      #ifdef MH_DEBUG
+        Serial.println(prgnum);
+      #endif
+      this->file_automatic = SD.open(prgpath);
+      if(!this->file_automatic.available()) return false;
+      this->stopallmotors();
+      this->file_automatic.readStringUntil('G');
+      this->bauto = true;
+      this->status = MCHN_STATUS::inprocess;
+      return this->next_command();
     };
 
     String config(String gcode=""){
@@ -310,8 +504,10 @@ class MHandler {
       while(dir){
         String line = "";
         numprg = validprg(dir.name());
-        //Serial.println(dir.name());
-        //Serial.println(numprg);
+        #ifdef MH_DEBUG
+          //Serial.println(dir.name());
+          //Serial.println(numprg);
+        #endif
         if(numprg>0){
           if(!dir.isDirectory()){
             while(dir.available()){
@@ -329,28 +525,38 @@ class MHandler {
       }
       dir.close();
       root.close();
-      //Serial.print("MH: ");
-      //Serial.print(result);
+      #ifdef MH_DEBUG
+        //Serial.print("MH: ");
+        //Serial.print(result);
+      #endif
       serializeJson(doc, result);
       return result;
     };
 
     void process(){
+      this->webSocket.loop();
+      if(time_alarm>0){
+        if((millis() - time_alarm)<300000){
+            return;
+          }
+      }
       if(this->bauto){
         if(this->auto_queue.size()>0){
-          Serial.println(auto_queue.size());
-          auto_queue.pop_back();
+          //Serial.println(auto_queue.size());
+          this->inprogress(this->auto_queue);
         }
       }else{
         if(this->hand_queue.size()>0){
+          this->inprogress(this->hand_queue);
+          /*
           for(std::vector<COMMAND>::iterator it = this->hand_queue.begin(); it != this->hand_queue.end(); ++it){
-            if(printCnt<1){Serial.println((*it).type);printCnt++;}
+            //if(printCnt<1){Serial.println((*it).type);printCnt++;}
             switch((*it).type){
               case 1:
                 if(((*it).time_start +  1000 * (*it).time)<millis() and this->hand_queue.size()<2){
                   this->M.at((*it).machine)->at((*it).pin)->set_state((*it).value);
                   this->hand_queue.pop_back();
-                  next_command();
+                  this->next_command();
                 }
                 break;
               case 2:
@@ -369,6 +575,7 @@ class MHandler {
               break;
             }
           }
+          */
         }
       }
     };
