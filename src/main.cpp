@@ -8,7 +8,6 @@
 #define INI_DEBUG
 
 
-
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_MCP23X17.h>
@@ -38,11 +37,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 
 void setup() {
-  while (lcd.begin(COLUMS, ROWS, LCD_5x8DOTS, D2, D1) != 1) //colums - 20, rows - 4, pixels - 5x8, SDA - D2, SCL - D1
+  Serial.begin(9600);
+  /*while (lcd.begin(COLUMS, ROWS, LCD_5x8DOTS, D2, D1) != 1) //colums - 20, rows - 4, pixels - 5x8, SDA - D2, SCL - D1
   {
     Serial.println(F("PCF8574 is not connected or lcd pins declaration is wrong. Only pins numbers: 4,5,6,16,11,12,13,14 are legal."));
     delay(5000);
-  }
+  }*/
+  lcd.begin(COLUMS, ROWS, LCD_5x8DOTS, D2, D1);
   lcd.print(F("Start")); //(F()) saves string to flash & keeps dynamic memory free
   delay(500);
   lcd.clear();
@@ -61,7 +62,7 @@ void setup() {
   mcp[2].begin_I2C(0x22);
   mcp[3].begin_I2C(0x23);
   //pinMode(9, INPUT);
-  Serial.begin(9600);
+  
   #ifdef MAIN_DEBUG
     Serial.println();
     Serial.println("Main: Serial begin");
@@ -83,16 +84,9 @@ void setup() {
   WiFiManager wifiManager;
  
   wifiManager.autoConnect("AutoConnectAP");
-<<<<<<< HEAD
   lcd.setCursor(0, 0);
   lcd.print(WiFi.localIP());
   Serial.println("Main: WiFi was connected.)");
-=======
- 
-  #ifdef MAIN_DEBUG
-    Serial.println("Main: WiFi was connected.)");
-  #endif
->>>>>>> 8adbfa34ba1308b24240e827b8573b977e33bbd0
   delay(1000);
 
   MH.begin();  
@@ -121,12 +115,12 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
     case WStype_DISCONNECTED:  // Событие происходит при отключени клиента 
       Serial.println("Main: web Socket disconnected");
       lcd.setCursor(0, 1);
-      lcd.print(F("Socet disconnected"));
+      lcd.print(F("Socet disconnect"));
       break;
     case WStype_CONNECTED: // Событие происходит при подключении клиента
         Serial.println("Main: web Socket Connected"); 
         lcd.setCursor(0, 1);
-        lcd.print(F("Socet Connected"));
+        lcd.print(F("Socet Connected "));
       break;
     case WStype_TEXT: // Событие происходит при получении данных текстового формата из webSocket
       #ifdef MAIN_DEBUG
