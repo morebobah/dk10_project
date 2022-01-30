@@ -26,9 +26,18 @@ SoftwareSerial SWSerial;
 WebSocketsServer webSocket = WebSocketsServer(81);
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
+
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 
 void setup() {
+  while (lcd.begin(COLUMS, ROWS, LCD_5x8DOTS, D2, D1) != 1) //colums - 20, rows - 4, pixels - 5x8, SDA - D2, SCL - D1
+  {
+    Serial.println(F("PCF8574 is not connected or lcd pins declaration is wrong. Only pins numbers: 4,5,6,16,11,12,13,14 are legal."));
+    delay(5000);
+  }
+  lcd.print(F("Start")); //(F()) saves string to flash & keeps dynamic memory free
+  delay(500);
+  lcd.clear();
   /* Hardware address A3A2A1
   0 0 0 = 0x20
   0 0 1 = 0x21
@@ -61,7 +70,8 @@ void setup() {
   WiFiManager wifiManager;
  
   wifiManager.autoConnect("AutoConnectAP");
- 
+  lcd.setCursor(0, 0);
+  lcd.print(WiFi.localIP());
   Serial.println("Main: WiFi was connected.)");
   delay(1000);
   
@@ -90,9 +100,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
   switch (type) {
     case WStype_DISCONNECTED:  // Событие происходит при отключени клиента 
       Serial.println("Main: web Socket disconnected");
+      lcd.setCursor(0, 1);
+      lcd.print(F("Socet disconnected"));
       break;
     case WStype_CONNECTED: // Событие происходит при подключении клиента
         Serial.println("Main: web Socket Connected"); 
+        lcd.setCursor(0, 1);
+        lcd.print(F("Socet Connected"));
       break;
     case WStype_TEXT: // Событие происходит при получении данных текстового формата из webSocket
       Serial.println("Main: Text recived");
