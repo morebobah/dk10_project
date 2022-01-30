@@ -9,267 +9,16 @@ var gcode = '';
 var bDirect = true;
 var sended = ' sended';
 let timerId = 0;
+var key_not_pressed = true;
+var started_prg = 0;
 
-/*
-
-const dateStringFormat = new Intl.DateTimeFormat('default', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-});
-
-const timeStringFormat = new Intl.DateTimeFormat('default', {
-    hour: '2-digit',
-    minute: '2-digit'
-});
-
-const messageHandler = event => {
-    var message = event.data.message;
-    var args = event.data.args;
-
-    switch (message) {
-        case commands.MG_GET_HISTORY:
-            let entriesContainer = document.getElementById('entries-container');
-            if (args.from == 0 && args.items.length) {
-                entriesContainer.textContent = '';
-
-                let clearButton = document.getElementById('btn-clear');
-                clearButton.classList.remove('hidden');
-            }
-
-            loadItems(args.items);
-            if (args.items.length == lastRequestSize) {
-                document.addEventListener('scroll', requestTrigger);
-            } else if (entriesContainer.childElementCount == 0) {
-                loadUIForEmptyHistory();
-            }
-            break;
-        default:
-            console.log(`Unexpected message: ${JSON.stringify(event.data)}`);
-            break;
-    }
-};
-
-const requestTrigger = function(event) {
-    let triggerRange = 50;
-    let element = document.body;
-
-    if (element.scrollTop + element.clientHeight >= element.scrollHeight - triggerRange) {
-        getMoreHistoryItems();
-        event.target.removeEventListener('scroll', requestTrigger);
-    }
-};
-
-function requestHistoryItems(from, count) {
-    let message = {
-        message: commands.MG_GET_HISTORY,
-        args: {
-            from: from,
-            count: count || DEFAULT_HISTORY_ITEM_COUNT
-        }
-    };
-
-    window.chrome.webview.postMessage(message);
+function out(msg) {
+    console.log(msg);
+    let context = '<div class="logline">' + new Date().toLocaleString() + '&nbsp;';
+    context += msg;
+    context += '</div>' + document.getElementById('logBar').innerHTML;
+    document.getElementById('logBar').innerHTML = context;
 }
-
-function removeItem(id) {
-    let message = {
-        message: commands.MG_REMOVE_HISTORY_ITEM,
-        args: {
-            id: id
-        }
-    };
-
-    window.chrome.webview.postMessage(message);
-}
-
-function createItemElement(item, id, date) {
-    let itemContainer = document.createElement('div');
-    itemContainer.id = id;
-    itemContainer.className = 'item-container';
-
-    let itemElement = document.createElement('div');
-    itemElement.className = 'item';
-
-    // Favicon
-    let faviconElement = document.createElement('div');
-    faviconElement.className = 'favicon';
-    let faviconImage = document.createElement('img');
-    faviconImage.src = item.favicon;
-    faviconElement.append(faviconImage);
-    itemElement.append(faviconElement);
-
-    // Title
-    let titleLabel = document.createElement('div');
-    titleLabel.className = 'label-title';
-    let linkElement = document.createElement('a');
-    linkElement.href = item.uri;
-    linkElement.title = item.title;
-    linkElement.textContent = item.title;
-    titleLabel.append(linkElement);
-    itemElement.append(titleLabel);
-
-    // URI
-    let uriLabel = document.createElement('div');
-    uriLabel.className = 'label-uri';
-    let textElement = document.createElement('p');
-    textElement.title = item.uri;
-    textElement.textContent = item.uri;
-    uriLabel.append(textElement);
-    itemElement.append(uriLabel);
-
-    // Time
-    let timeLabel = document.createElement('div');
-    timeLabel.className = 'label-time';
-    let timeText = document.createElement('p');
-    timeText.textContent = timeStringFormat.format(date);
-    timeLabel.append(timeText);
-    itemElement.append(timeLabel);
-
-    // Close button
-    let closeButton = document.createElement('div');
-    closeButton.className = 'btn-close';
-    closeButton.addEventListener('click', function(e) {
-        if (itemContainer.parentNode.children.length <= 2) {
-            itemContainer.parentNode.remove();
-        } else {
-            itemContainer.remove();
-        }
-
-        let entriesContainer = document.getElementById('entries-container');
-        if (entriesContainer.childElementCount == 0) {
-            loadUIForEmptyHistory();
-        }
-        removeItem(parseInt(id.split('-')[1]));
-    });
-    itemElement.append(closeButton);
-    itemContainer.append(itemElement);
-
-    return itemContainer;
-}
-
-function createDateContainer(id, date) {
-    let dateContainer = document.createElement('div');
-    dateContainer.id = id;
-
-    let dateLabel = document.createElement('h3');
-    dateLabel.className = 'header-date';
-    dateLabel.textContent = dateStringFormat.format(date);
-    dateContainer.append(dateLabel);
-
-    return dateContainer;
-}
-
-function loadItems(items) {
-    let dateContainer;
-    let fragment;
-
-    items.map((entry) => {
-        let id = entry.id;
-        let item = entry.item;
-        let itemContainerId = `item-${id}`;
-
-        // Skip the item if already loaded. This could happen if the user
-        // visits an item for the current date again before requesting more
-        // history items.
-        let itemContainer = document.getElementById(itemContainerId);
-        if (itemContainer) {
-            return;
-        }
-
-        let date = new Date(item.timestamp);
-        let day = date.getDate();
-        let month = date.getMonth();
-        let year = date.getFullYear();
-        let dateContainerId = `entries-${month}-${day}-${year}`;
-
-        // If entry belongs to a new date, append buffered items for previous
-        // date.
-        if (dateContainer && dateContainer.id != dateContainerId) {
-            dateContainer.append(fragment);
-        }
-
-        dateContainer = document.getElementById(dateContainerId);
-        if (!dateContainer) {
-            dateContainer = createDateContainer(dateContainerId, date);
-            fragment = document.createDocumentFragment();
-
-            let entriesContainer = document.getElementById('entries-container');
-            entriesContainer.append(dateContainer);
-        } else if (!fragment) {
-            fragment = document.createDocumentFragment();
-        }
-
-        itemContainer = createItemElement(item, itemContainerId, date);
-        fragment.append(itemContainer);
-    });
-
-    // Append remaining items in buffer
-    if (fragment) {
-        dateContainer.append(fragment);
-    }
-}
-
-function getMoreHistoryItems(n) {
-    n = n ? n : DEFAULT_HISTORY_ITEM_COUNT;
-
-    requestHistoryItems(requestedTop, n);
-    requestedTop += n;
-    lastRequestSize = n;
-    document.removeEventListener('scroll', requestTrigger);
-}
-
-function addUIListeners() {
-    let confirmButton = document.getElementById('prompt-true');
-    confirmButton.addEventListener('click', function(event) {
-        clearHistory();
-        event.stopPropagation();
-    });
-
-    let cancelButton = document.getElementById('prompt-false');
-    cancelButton.addEventListener('click', function(event) {
-        toggleClearPrompt();
-        event.stopPropagation();
-    });
-
-    let promptBox = document.getElementById('prompt-box');
-    promptBox.addEventListener('click', function(event) {
-        event.stopPropagation();
-    });
-
-    let promptOverlay = document.getElementById('overlay');
-    promptOverlay.addEventListener('click', toggleClearPrompt);
-
-    let clearButton = document.getElementById('btn-clear');
-    clearButton.addEventListener('click', toggleClearPrompt);
-}
-
-function toggleClearPrompt() {
-    let promptOverlay = document.getElementById('overlay');
-    promptOverlay.classList.toggle('hidden');
-}
-
-function loadUIForEmptyHistory() {
-    let entriesContainer = document.getElementById('entries-container');
-    entriesContainer.textContent = EMPTY_HISTORY_MESSAGE;
-
-    let clearButton = document.getElementById('btn-clear');
-    clearButton.classList.add('hidden');
-}
-
-function clearHistory() {
-    toggleClearPrompt();
-    loadUIForEmptyHistory();
-
-    let message = {
-        message: commands.MG_CLEAR_HISTORY,
-        args: {}
-    };
-
-    window.chrome.webview.postMessage(message);
-}
-*/
 
 const messageHandler = event => {
     var message = event.data.message;
@@ -277,7 +26,7 @@ const messageHandler = event => {
     switch (message) {
         case commands.MG_INIT_SOCKET:
             ipAddr = event.data.args.ipAddr;
-            console.log(ipAddr);
+            out(ipAddr);
             socket = new WebSocket(ipAddr);
             socket.onopen = function() {
                 var message = {
@@ -291,11 +40,11 @@ const messageHandler = event => {
             };
             socket.onclose = function(event) {
                 if (event.wasClean) {
-                    console.log('Соединение закрыто чисто');
+                    out('Соединение закрыто чисто');
                 } else {
-                    console.log('Обрыв соединения'); // например, "убит" процесс сервера
+                    out('Обрыв соединения'); // например, "убит" процесс сервера
                 }
-                console.log('Код: ' + event.code + ' причина: ' + event.reason);
+                out('Код: ' + event.code + ' причина: ' + event.reason);
                 var message = {
                     message: commands.MG_SOCKET_DISCONNECT,
                     args: {}
@@ -303,15 +52,18 @@ const messageHandler = event => {
                 window.chrome.webview.postMessage(message);
             };
             socket.onmessage = function(event) {
+                //Will get always json
                 var objJSON = $.parseJSON(event.data);
                 var keys = Object.keys(objJSON);
+                //Different keys depends befavior
                 if (keys.includes("MACHINE")) {
                     refreshPanel(objJSON);
                     sendText("get_list_prg");
                 }
                 if (keys.includes("program")) refreshAuto(objJSON);
                 if (keys.includes("status")) {
-                    document.getElementById('recordsBar').innerHTML += event.data;
+                    out(event.data);
+                    refreshStatus(objJSON);
                 }
             };
             break;
@@ -336,13 +88,220 @@ const messageHandler = event => {
             clearlist();
             break;
         default:
-            console.log(`Unexpected message: ${JSON.stringify(event.data)}`);
+            out(`Unexpected message: ${JSON.stringify(event.data)}`);
             break;
     }
 }
 
+function refreshStatus(objJSON) {
+    key_not_pressed = true;
+    setButtonState(objJSON['status']);
+    let sbtn = document.getElementById('start_btn');
+    let pbtn = document.getElementById('pause_btn');
+    let stbtn = document.getElementById('stop_btn');
+    switch (objJSON['status']) {
+        case 0:
+            sbtn.disabled = false;
+            pbtn.disabled = true;
+            stbtn.disabled = true;
+            sbtn.style.backgroundColor = 'lime';
+            pbtn.style.backgroundColor = '';
+            stbtn.style.backgroundColor = '';
+            pbtn.value = 'Пауза';
+            Array.from(document.getElementsByClassName('disprg')).forEach(function(k) {
+                k.className = 'prg';
+            });
+            break;
+        case 1:
+            sbtn.disabled = true;
+            pbtn.disabled = false;
+            stbtn.disabled = false;
+            sbtn.style.backgroundColor = '';
+            pbtn.style.backgroundColor = 'lime';
+            stbtn.style.backgroundColor = 'darkred';
+            pbtn.value = 'Далее';
+            break;
+        case 2:
+            sbtn.disabled = true;
+            pbtn.disabled = false;
+            stbtn.disabled = false;
+            sbtn.style.backgroundColor = '';
+            pbtn.style.backgroundColor = 'lime';
+            stbtn.style.backgroundColor = 'darkred';
+            pbtn.value = 'Пауза';
+            Array.from(document.getElementsByClassName('prg')).forEach(function(k) {
+                k.className = 'disprg';
+            });
+            break;
+        default:
+    }
+}
+
+function setButtonState(status = '0') {
+    out('Started prg=' + String(started_prg));
+    let buttons = document.getElementsByClassName('btn_auto');
+    Array.from(buttons).forEach(function(btn) {
+        let prg = btn.getAttribute('data-prg_id');
+        let type = btn.id.charCodeAt(2);
+        out('Code=' + String(type));
+        //Search for st'a'rt, codeof('a') = 97
+        if (type == 97) {
+            out('Status=' + String(status));
+            if (status == '0') {
+                out('data-prg_id=' + btn.getAttribute('data-prg_id'));
+                if (btn.getAttribute('data-prg_id') == 'zero') {
+                    btn.style.backgroundColor = '';
+                    btn.disabled = true;
+                    out('Set true');
+                } else {
+                    btn.style.backgroundColor = 'lime';
+                    btn.disabled = false;
+                    out('Set false');
+                }
+            } else {
+                btn.style.backgroundColor = '';
+                btn.disabled = true;
+                out('Set true');
+            }
+        }
+
+        //Search for st'o'p, codeof('o') = 111
+        if (type == 111) {
+            if (status == '0') {
+                btn.style.backgroundColor = '';
+                btn.disabled = true;
+            }
+            if (status == '1' || status == '2') {
+                let prg = btn.getAttribute('data-prg_id');
+                if (prg == started_prg) {
+                    btn.style.backgroundColor = 'darkred';
+                    btn.disabled = false;
+                } else {
+                    btn.style.backgroundColor = '';
+                    btn.disabled = true;
+                }
+            }
+        }
+
+        //Search for pa'u'se, codeof('u') = 117
+        if (type == 117) {
+            if (status == '0') {
+                btn.style.backgroundColor = '';
+                btn.disabled = true;
+            }
+            if (status == '1') {
+                if (prg == started_prg) {
+                    btn.style.backgroundColor = 'lime';
+                    btn.value = 'Далее';
+                    btn.disabled = false;
+                } else {
+                    btn.style.backgroundColor = '';
+                    btn.disabled = true;
+                }
+            }
+            if (status == '2') {
+                if (prg == started_prg) {
+                    btn.style.backgroundColor = 'lime';
+                    btn.value = 'Пауза';
+                    btn.disabled = false;
+                } else {
+                    btn.style.backgroundColor = '';
+                    btn.disabled = true;
+                }
+            }
+        }
+
+    });
+}
+
+function CreatePanel(prg_id, prg_name) {
+    let panel = document.createElement('div');
+    panel.className = 'main_auto_panel';
+    panel.id = 'panel_' + prg_id;
+    let titlepanel = document.createElement('div');
+    titlepanel.className = 'title_auto_panel';
+    titlepanel.id = 'panel_title_' + prg_id;
+    titlepanel.innerHTML = prg_name;
+    panel.append(titlepanel);
+    let bodypanel = document.createElement('div');
+    bodypanel.className = 'body_auto_panel';
+    panel.append(bodypanel);
+    let keyspanel = document.createElement('div');
+    keyspanel.className = 'keys_auto_panel';
+    bodypanel.append(keyspanel);
+    let start_bnt = document.createElement('input');
+    start_bnt.type = 'button';
+    start_bnt.id = 'start_btn_' + prg_id;
+    start_bnt.className = 'btn_auto';
+    start_bnt.dataset.prg_id = prg_id;
+    start_bnt.value = 'Старт';
+    start_bnt.disabled = true;
+    keyspanel.append(start_bnt);
+    let pause_bnt = document.createElement('input');
+    pause_bnt.type = 'button';
+    pause_bnt.id = 'pause_btn_' + prg_id;
+    pause_bnt.dataset.prg_id = prg_id;
+    pause_bnt.className = 'btn_auto';
+    pause_bnt.value = 'Пауза';
+    pause_bnt.disabled = true;
+    keyspanel.append(pause_bnt);
+    let stop_bnt = document.createElement('input');
+    stop_bnt.type = 'button';
+    stop_bnt.id = 'stop_btn_' + prg_id;
+    stop_bnt.dataset.prg_id = prg_id;
+    stop_bnt.className = 'btn_auto';
+    stop_bnt.value = 'Стоп';
+    stop_bnt.disabled = true;
+    keyspanel.append(stop_bnt);
+    let ctrlpanel = document.createElement('div');
+    ctrlpanel.className = 'ctrl_auto';
+    bodypanel.append(ctrlpanel);
+    return panel;
+}
+
+function setAutoPrgEvents() {
+    Array.from(document.getElementsByClassName('btn_auto')).forEach((item) => {
+        let type = item.id.charCodeAt(2);
+        if (type == 97) {
+            item.addEventListener('click', function(e) {
+                let opt_id = e.target.getAttribute('data-prg_id');
+                if (opt_id === 'zero') {
+                    out('zero');
+                } else {
+                    if (key_not_pressed) {
+                        out('start_prg' + opt_id);
+                        started_prg = opt_id;
+                        sendText('start_prg' + opt_id);
+                        key_not_pressed = false;
+                    }
+                }
+            });
+        }
+        if (type == 111) {
+            item.addEventListener('click', function(e) {
+                if (key_not_pressed) {
+                    sendText('stop_prg');
+                    started_prg = 0;
+                    key_not_pressed = false;
+                }
+            });
+        }
+        if (type == 117) {
+            item.addEventListener('click', function(e) {
+                if (key_not_pressed) {
+                    sendText('pause_prg');
+                    started_prg = 0;
+                    key_not_pressed = false;
+                }
+            });
+        }
+    });
+    setButtonState();
+}
+
 function refreshAuto(objJSON) {
     var keys = Object.keys(objJSON);
+    var panels = new Array();
     let ctrlBar = document.getElementById('apanel');
     if (ctrlBar) {
         ctrlBar.remove();
@@ -351,43 +310,10 @@ function refreshAuto(objJSON) {
     ctrlBar = document.createElement('div');
     ctrlBar.id = 'apanel';
     ctrlBar.className = 'barsControls';
+    let mainpanel = CreatePanel('zero', 'Запуск автоматических программ');
 
-    let mainpanel = document.createElement('div');
-    mainpanel.className = 'main_auto_panel';
-    let titlepanel = document.createElement('div');
-    titlepanel.className = 'title_auto_panel';
-    titlepanel.innerHTML = 'Запуск автоматических программ';
-    mainpanel.append(titlepanel);
-    let bodypanel = document.createElement('div');
-    bodypanel.className = 'body_auto_panel';
-    mainpanel.append(bodypanel);
-    let keyspanel = document.createElement('div');
-    keyspanel.className = 'keys_auto_panel';
-    bodypanel.append(keyspanel);
-    let start_bnt = document.createElement('input');
-    start_bnt.type = 'button';
-    start_bnt.id = 'start_btn';
-    start_bnt.className = 'btn_auto';
-    start_bnt.value = 'Старт';
-    start_bnt.disabled = true;
-    keyspanel.append(start_bnt);
-    let pause_bnt = document.createElement('input');
-    pause_bnt.type = 'button';
-    pause_bnt.id = 'pause_btn';
-    pause_bnt.className = 'btn_auto';
-    pause_bnt.value = 'Пауза';
-    pause_bnt.disabled = true;
-    keyspanel.append(pause_bnt);
-    let stop_bnt = document.createElement('input');
-    stop_bnt.type = 'button';
-    stop_bnt.id = 'stop_btn';
-    stop_bnt.className = 'btn_auto';
-    stop_bnt.value = 'Стоп';
-    stop_bnt.disabled = true;
-    keyspanel.append(stop_bnt);
-    let ctrlpanel = document.createElement('div');
-    ctrlpanel.className = 'ctrl_auto';
-    bodypanel.append(ctrlpanel);
+    let ctrlpanel = mainpanel.getElementsByClassName('ctrl_auto').item(0);
+    if (!ctrlpanel) return;
     let runstr = document.createElement('div');
     runstr.className = 'run_string';
     runstr.id = 'runstring';
@@ -395,12 +321,11 @@ function refreshAuto(objJSON) {
     let itemslist = document.createElement('div');
     itemslist.className = 'items_list';
     ctrlpanel.append(itemslist);
-
-
     $.each(objJSON[keys], function(key, val) {
         var iNumOption = 0;
         let optname = '';
         let optid = '';
+        let optnum = '';
         Object.keys(val).forEach(function(k) {
             if (k == "name") {
                 optname = val[k];
@@ -408,62 +333,72 @@ function refreshAuto(objJSON) {
             }
             if (k == "ID") {
                 optid = 'start_prg' + val[k].toString();
+                optnum = val[k].toString();
                 iNumOption += 2;
             }
             if (iNumOption == 3) {
                 let item_div = document.createElement('div');
                 item_div.className = 'item_auto_prg';
                 item_div.id = optid;
-                html = '<label class="switch">';
-                html += '<input type="checkbox"><span class="slider round"></span></label><span>';
-                html += '<span class="prg" data-key="' + optid + '">' + optname + '</span>';
-                item_div.innerHTML = html;
+                let sw_label = document.createElement('label');
+                sw_label.className = 'switch';
+                sw_label.id = 'sw_' + optnum;
+                let sw_input = document.createElement('input');
+                sw_input.type = 'checkbox';
+                sw_input.name = 'inp_' + optnum;
+                let bP = (localStorage.getItem(sw_input.name) === 'true');
+                sw_input.checked = bP;
+                if (bP) panels.push(CreatePanel(optnum, optname));
+                let sw_span = document.createElement('span');
+                sw_span.className = 'slider round';
+                sw_label.append(sw_input);
+                sw_label.append(sw_span);
+                let prg_span = document.createElement('span');
+                prg_span.className = 'prg';
+                prg_span.dataset.prg_id = optnum;
+                prg_span.innerHTML = optname;
+                item_div.append(sw_label);
+                item_div.append(prg_span);
                 itemslist.append(item_div);
                 item_div.addEventListener('click', function(e) {
                     if (e.target.className != 'prg') return;
                     let runstr = document.getElementById('runstring');
                     runstr.innerHTML = e.target.innerHTML;
                     runstr.setAttribute('data-key', e.target.getAttribute('data-key'));
-                    let sbtn = document.getElementById('start_btn');
-                    let pbtn = document.getElementById('pause_btn');
-                    let stbtn = document.getElementById('stop_btn');
-                    sbtn.setAttribute('data-key', e.target.getAttribute('data-key'));
-                    sbtn.style.backgroundColor = 'lime';
-                    sbtn.disabled = false;
-                    pbtn.disabled = true;
-                    stbtn.disabled = true;
-                    pbtn.style.backgroundColor = '';
-                    stbtn.style.backgroundColor = '';
+                    let trg = e.target.parentElement;
+                    while (trg.className != 'body_auto_panel' && trg) {
+                        trg = trg.parentElement;
+                    }
+                    Array.from(trg.getElementsByClassName('btn_auto')).forEach((item) => {
+                        let type = item.id.charCodeAt(2);
+                        item.setAttribute('data-prg_id', e.target.getAttribute('data-prg_id'));
+                        if (type == 97) {
+                            item.style.backgroundColor = 'lime';
+                            item.disabled = false;
+                        }
+                        if (type == 111 || type == 117) {
+                            item.style.backgroundColor = '';
+                            item.disabled = true;
+                        }
+                    });
+                });
+                sw_input.addEventListener('click', function(e) {
+                    localStorage.setItem(e.target.name, e.target.checked);
+                    if (localStorage.getItem(e.target.name) === 'true') {
+                        let ctrlBar = document.getElementById('apanel');
+                        let panel = CreatePanel(optnum, optname);
+                        ctrlBar.append(panel);
+                    }
                 });
             }
         });
     });
 
-    start_bnt.addEventListener('click', function(e) {
-        gcode = e.target.getAttribute('data-key');
-        if (gcode == '') return;
-        document.getElementById(gcode).disabled = true;
-        e.target.disabled = true;
-        e.target.style.backgroundColor = '';
-        let pbtn = document.getElementById('pause_btn');
-        let stbtn = document.getElementById('stop_btn');
-        pbtn.disabled = false;
-        stbtn.disabled = false;
-        pbtn.style.backgroundColor = 'lime';
-        stbtn.style.backgroundColor = 'darkred';
-        Array.from(document.getElementsByClassName('prg')).forEach(function(k) {
-            k.className = 'disitem_auto_prg';
-        });
-
-        sendText(gcode);
-        gcode = '';
-    });
-
     ctrlBar.append(mainpanel);
-
+    panels.forEach((item) => { ctrlBar.append(item) });
     let mainBar = document.getElementById('autoBar');
     mainBar.append(ctrlBar);
-    mainBar.append(AutoPrg);
+    setAutoPrgEvents();
 }
 
 function refreshRecord() {
@@ -479,7 +414,7 @@ function refreshPanel(objJSON) {
     //var objJSON = $.parseJSON(data);
     var keys = Object.keys(objJSON);
     if (keys.length == 0) {
-        console.log(`JSON wrong during MACHINE create!`);
+        out(`JSON wrong during MACHINE create!`);
         return false;
     }
     let ctrlBar = document.getElementById('panel');

@@ -166,6 +166,10 @@
     min-height: 100%;
 }
 
+.barsControls#apanel {
+    flex-wrap: wrap;
+}
+
 .ctrlBTN {
     width: 100px;
     height: 100px;
@@ -565,6 +569,7 @@ input.M[type=checkbox]:checked+.M {
     align-items: flex-start;
     width: 350px;
     height: 200px;
+    margin: 2px;
     overflow: hidden;
     border: 1px solid black;
 }
@@ -639,11 +644,13 @@ input.M[type=checkbox]:checked+.M {
     cursor: pointer;
 }
 
-.disitem_auto_prg {
-    width: 100%;
-    min-height: 25px;
-    height: 25px;
-    margin: 1px;
+.prg {
+    color: black;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.disprg {
     color: #a9a9a9;
     cursor: pointer;
     pointer-events: none;
@@ -710,4 +717,26 @@ input:checked+.slider:before {
 
 .slider.round:before {
     border-radius: 50%;
+}
+
+.logs {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    min-height: 100%;
+    background-color: white;
+    border: none;
+    box-shadow: 0 0 3px dodgerblue;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.logline {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    font-size: xx-small;
+    border: 1px solid dodgerblue;
 }
