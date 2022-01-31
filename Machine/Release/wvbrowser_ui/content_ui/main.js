@@ -95,7 +95,10 @@ const messageHandler = event => {
 
 function refreshStatus(objJSON) {
     key_not_pressed = true;
+    out('prg_id=' + objJSON['prg_id']);
+    started_prg = objJSON['prg_id'];
     setButtonState(objJSON['status']);
+    /*
     let sbtn = document.getElementById('start_btn');
     let pbtn = document.getElementById('pause_btn');
     let stbtn = document.getElementById('stop_btn');
@@ -135,10 +138,10 @@ function refreshStatus(objJSON) {
             break;
         default:
     }
+    */
 }
 
 function setButtonState(status = '0') {
-    out('Started prg=' + String(started_prg));
     let buttons = document.getElementsByClassName('btn_auto');
     Array.from(buttons).forEach(function(btn) {
         let prg = btn.getAttribute('data-prg_id');
@@ -152,16 +155,13 @@ function setButtonState(status = '0') {
                 if (btn.getAttribute('data-prg_id') == 'zero') {
                     btn.style.backgroundColor = '';
                     btn.disabled = true;
-                    out('Set true');
                 } else {
                     btn.style.backgroundColor = 'lime';
                     btn.disabled = false;
-                    out('Set false');
                 }
             } else {
                 btn.style.backgroundColor = '';
                 btn.disabled = true;
-                out('Set true');
             }
         }
 
@@ -173,6 +173,8 @@ function setButtonState(status = '0') {
             }
             if (status == '1' || status == '2') {
                 let prg = btn.getAttribute('data-prg_id');
+                out(started_prg);
+                out(prg);
                 if (prg == started_prg) {
                     btn.style.backgroundColor = 'darkred';
                     btn.disabled = false;
@@ -193,6 +195,7 @@ function setButtonState(status = '0') {
                 if (prg == started_prg) {
                     btn.style.backgroundColor = 'lime';
                     btn.value = 'Далее';
+                    btn.dataset.cmd = 'continue_prg';
                     btn.disabled = false;
                 } else {
                     btn.style.backgroundColor = '';
@@ -203,6 +206,7 @@ function setButtonState(status = '0') {
                 if (prg == started_prg) {
                     btn.style.backgroundColor = 'lime';
                     btn.value = 'Пауза';
+                    btn.dataset.cmd = 'pause_prg';
                     btn.disabled = false;
                 } else {
                     btn.style.backgroundColor = '';
@@ -241,6 +245,7 @@ function CreatePanel(prg_id, prg_name) {
     pause_bnt.type = 'button';
     pause_bnt.id = 'pause_btn_' + prg_id;
     pause_bnt.dataset.prg_id = prg_id;
+    pause_bnt.dataset.cmd = 'pause_prg';
     pause_bnt.className = 'btn_auto';
     pause_bnt.value = 'Пауза';
     pause_bnt.disabled = true;
@@ -289,7 +294,7 @@ function setAutoPrgEvents() {
         if (type == 117) {
             item.addEventListener('click', function(e) {
                 if (key_not_pressed) {
-                    sendText('pause_prg');
+                    sendText(e.target.getAttribute('data-cmd'));
                     started_prg = 0;
                     key_not_pressed = false;
                 }
