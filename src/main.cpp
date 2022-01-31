@@ -43,10 +43,12 @@ void setup() {
     Serial.println(F("PCF8574 is not connected or lcd pins declaration is wrong. Only pins numbers: 4,5,6,16,11,12,13,14 are legal."));
     delay(5000);
   }*/
-  lcd.begin(COLUMS, ROWS, LCD_5x8DOTS, D2, D1);
-  lcd.print(F("Start")); //(F()) saves string to flash & keeps dynamic memory free
-  delay(500);
-  lcd.clear();
+  boolean bLCD = lcd.begin(COLUMS, ROWS, LCD_5x8DOTS, D2, D1);
+  if(bLCD){
+    lcd.print(F("Start")); //(F()) saves string to flash & keeps dynamic memory free
+    delay(500);
+    lcd.clear();
+  }
   /* Hardware address A3A2A1
   0 0 0 = 0x20
   0 0 1 = 0x21
@@ -77,31 +79,29 @@ void setup() {
 
   boolean bSD = SD.begin(SS);
   while(!bSD){
-    Serial.println("Main: SD failed");
+    #ifdef MAIN_DEBUG
+      Serial.println("Main: SD failed");
+    #endif
+    if(bLCD) lcd.print(F("SD failed")); 
     delay(1000);
     bSD = SD.begin(SS);
   }
   WiFiManager wifiManager;
  
   wifiManager.autoConnect("AutoConnectAP");
-  lcd.setCursor(0, 0);
-  lcd.print(WiFi.localIP());
-  Serial.println("Main: WiFi was connected.)");
-  delay(1000);
+  if(bLCD){
+    lcd.setCursor(0, 0);
+    lcd.print(WiFi.localIP());
+  }
+  #ifdef MAIN_DEBUG
+    Serial.println("Main: WiFi was connected.)");
+    delay(1000);
+  #endif
 
   MH.begin();  
   MH.webSocket.begin();
   MH.webSocket.onEvent(webSocketEvent);
-
-/*
-  std::vector<int> a;
-  std::vector<int>::iterator it = a.begin();
-  a.push_back(0);
-  a.pop_back();
-  a.insert(a.end(), 3);
-  it++;
-*/
-
+  MH.bLCD = bLCD;
 }
 
 void loop() {
@@ -113,14 +113,22 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
   String upload = (char*)payload;
   switch (type) {
     case WStype_DISCONNECTED:  // Событие происходит при отключени клиента 
-      Serial.println("Main: web Socket disconnected");
-      lcd.setCursor(0, 1);
-      lcd.print(F("Socet disconnect"));
+      #ifdef MAIN_DEBUG
+        Serial.println("Main: web Socket disconnected");
+      #endif
+      if(MH.bLCD){
+        lcd.setCursor(0, 1);
+        lcd.print(F("Socet disconnect"));
+      }
       break;
     case WStype_CONNECTED: // Событие происходит при подключении клиента
-        Serial.println("Main: web Socket Connected"); 
-        lcd.setCursor(0, 1);
-        lcd.print(F("Socet Connected "));
+        #ifdef MAIN_DEBUG
+          Serial.println("Main: web Socket Connected");
+        #endif
+        if(MH.bLCD){
+          lcd.setCursor(0, 1);
+          lcd.print(F("Socet Connected "));
+        }
       break;
     case WStype_TEXT: // Событие происходит при получении данных текстового формата из webSocket
       #ifdef MAIN_DEBUG

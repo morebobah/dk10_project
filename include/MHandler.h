@@ -48,7 +48,8 @@ class MHandler {
     int printCnt = 0;
     File file_automatic; //pointer to current programm's file
     uint64_t time_alarm = 0; //Alarm will stop all machines for 5 minutes
-    MCHN_STATUS status = MCHN_STATUS::stoped; //machine status 
+    MCHN_STATUS status = MCHN_STATUS::stoped; //machine status
+    String prg_id = "";
     
     void stopallmotors(){
       for(std::vector<Machine*>::iterator it = M.begin(); it != M.end(); ++it){
@@ -189,6 +190,7 @@ class MHandler {
               Serial.println("MH: program finished");
             #endif
             this->status=MCHN_STATUS::stoped;
+            this->prg_id = "";
             return true;
           }
       }else{
@@ -226,6 +228,7 @@ class MHandler {
       String result = "MSW";
       DynamicJsonDocument doc(4096);
       doc["status"] = this->status;
+      doc["prg_id"] = this->prg_id;
       for(std::vector<Machine*>::iterator it = M.begin(); it != M.end(); ++it){
         uint8_t mchnum = (*it)->get_machinenum();
         doc["state"][mchnum]["machine"] = mchnum;
@@ -303,6 +306,7 @@ class MHandler {
         }
         if(bSend){
           doc["status"] = this->status;
+          doc["prg_id"] = this->prg_id;
           serializeJson(doc, result);
           sendAnswer(result);
         }
@@ -314,6 +318,7 @@ class MHandler {
     };
   
   public:
+    boolean bLCD = false;
     WebSocketsServer webSocket = WebSocketsServer(81);
     MHandler(){};
 
@@ -415,7 +420,8 @@ class MHandler {
 
       //get list of saved prog
       if(strncmp(payload, "get_list_prg", 12)==0){
-        if(this->sendAnswer(this->listofprg((char*)payload))) return 0;
+        this->sendAnswer(this->listofprg((char*)payload));
+        this->sendAnswer(this->get_status());
         return 8; 
       }
 
@@ -472,6 +478,7 @@ class MHandler {
       #endif
       this->file_automatic = SD.open(prgpath);
       if(!this->file_automatic.available()) return false;
+      this->prg_id = prgnum;
       this->stopallmotors();
       this->file_automatic.readStringUntil('G');
       this->bauto = true;
@@ -483,6 +490,7 @@ class MHandler {
       String result = "";
       if(gcode.isEmpty()){
         File f = SD.open(defaultJson);
+        Serial.println(defaultJson);
         if(!f)return "MH: Error no struct json file";
         while(f.available()){
           result += (char)f.read();
@@ -548,34 +556,6 @@ class MHandler {
       }else{
         if(this->hand_queue.size()>0){
           this->inprogress(this->hand_queue);
-          /*
-          for(std::vector<COMMAND>::iterator it = this->hand_queue.begin(); it != this->hand_queue.end(); ++it){
-            //if(printCnt<1){Serial.println((*it).type);printCnt++;}
-            switch((*it).type){
-              case 1:
-                if(((*it).time_start +  1000 * (*it).time)<millis() and this->hand_queue.size()<2){
-                  this->M.at((*it).machine)->at((*it).pin)->set_state((*it).value);
-                  this->hand_queue.pop_back();
-                  this->next_command();
-                }
-                break;
-              case 2:
-                if((bool)((*it).value) == this->M.at((*it).machine)->at((*it).pin)->get_state()){
-                  this->hand_queue.erase(it);
-                }
-                break;
-              case 4:
-                int weight = ((Weigher *)(this->M.at((*it).machine)->at((*it).pin)))->getV();
-                if(weight>=(*it).value or weight<0){
-                  this->hand_queue.erase(it);
-                }
-                break;
-            }
-            if(this->hand_queue.size()==0){
-              break;
-            }
-          }
-          */
         }
       }
     };
