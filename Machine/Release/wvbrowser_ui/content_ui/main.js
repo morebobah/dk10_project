@@ -11,6 +11,7 @@ var sended = ' sended';
 let timerId = 0;
 var key_not_pressed = true;
 var started_prg = 0;
+var default_on = true;
 
 function out(msg) {
     console.log(msg);
@@ -97,48 +98,38 @@ function refreshStatus(objJSON) {
     key_not_pressed = true;
     out('prg_id=' + objJSON['prg_id']);
     started_prg = objJSON['prg_id'];
+    default_on = objJSON['default_on'] == 1;
     setButtonState(objJSON['status']);
-    /*
-    let sbtn = document.getElementById('start_btn');
-    let pbtn = document.getElementById('pause_btn');
-    let stbtn = document.getElementById('stop_btn');
-    switch (objJSON['status']) {
-        case 0:
-            sbtn.disabled = false;
-            pbtn.disabled = true;
-            stbtn.disabled = true;
-            sbtn.style.backgroundColor = 'lime';
-            pbtn.style.backgroundColor = '';
-            stbtn.style.backgroundColor = '';
-            pbtn.value = 'Пауза';
-            Array.from(document.getElementsByClassName('disprg')).forEach(function(k) {
-                k.className = 'prg';
-            });
-            break;
-        case 1:
-            sbtn.disabled = true;
-            pbtn.disabled = false;
-            stbtn.disabled = false;
-            sbtn.style.backgroundColor = '';
-            pbtn.style.backgroundColor = 'lime';
-            stbtn.style.backgroundColor = 'darkred';
-            pbtn.value = 'Далее';
-            break;
-        case 2:
-            sbtn.disabled = true;
-            pbtn.disabled = false;
-            stbtn.disabled = false;
-            sbtn.style.backgroundColor = '';
-            pbtn.style.backgroundColor = 'lime';
-            stbtn.style.backgroundColor = 'darkred';
-            pbtn.value = 'Пауза';
-            Array.from(document.getElementsByClassName('prg')).forEach(function(k) {
-                k.className = 'disprg';
-            });
-            break;
-        default:
-    }
-    */
+    var keys = Object.keys(objJSON['state']);
+    keys.forEach(function(mach_num) {
+        let mC = objJSON['state'][mach_num]['machine'];
+        objJSON['state'][mach_num]['pins'].forEach(function(pin_obj) {
+            let ico = document.getElementById('ico_' + mC + '_' + pin_obj['type'] + '_' + pin_obj['pin']);
+            if (pin_obj['type'] == 'M') {
+                if (pin_obj['value'] == default_on) {
+                    ico.style.backgroundImage = 'url(img/small_smotor_run.gif)';
+                } else {
+                    ico.style.backgroundImage = 'url(img/small_smotor.png)';
+                }
+            }
+
+            if (pin_obj['type'] == 'S') {
+                if (pin_obj['value'] == default_on) {
+                    ico.style.backgroundImage = 'url(img/small_sensor_run.png)';
+                } else {
+                    ico.style.backgroundImage = 'url(img/small_sensor.png)';
+                }
+            }
+
+            if (pin_obj['type'] == 'W') {
+                if (pin_obj['value'] >= 0) {
+                    ico.style.backgroundImage = 'url(img/small_weigter_run.png)';
+                } else {
+                    ico.style.backgroundImage = 'url(img/small_weigter.png)';
+                }
+            }
+        });
+    });
 }
 
 function setButtonState(status = '0') {
@@ -262,6 +253,12 @@ function CreatePanel(prg_id, prg_name) {
     ctrlpanel.className = 'ctrl_auto';
     bodypanel.append(ctrlpanel);
     return panel;
+}
+
+function killPanel(prg_id) {
+    let panel = document.getElementById('panel_' + prg_id);
+    if (panel) panel.remove();
+    setButtonState();
 }
 
 function setAutoPrgEvents() {
@@ -393,6 +390,9 @@ function refreshAuto(objJSON) {
                         let ctrlBar = document.getElementById('apanel');
                         let panel = CreatePanel(optnum, optname);
                         ctrlBar.append(panel);
+                        setButtonState();
+                    } else {
+                        killPanel(optnum);
                     }
                 });
             }
@@ -433,6 +433,7 @@ function refreshPanel(objJSON) {
     $.each(objJSON[keys[0]], function(key, val) {
         let machineControl = document.createElement('div');
         machineControl.className = 'machine';
+        machineControl.id = 'machine_' + key;
         let labelControl = document.createElement('div');
         labelControl.className = 'machLabel';
         labelControl.innerHTML = 'Machine: ' + key;
@@ -494,6 +495,7 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
         pinControl.id = 'pin[' + objJSON[key]["ADR"] + ']';
         let icoPin = document.createElement('div');
         icoPin.className = objJSON[key]["PINTYPE"] + "Ico";
+        icoPin.id = 'ico_' + machine + '_' + objJSON[key]["PINTYPE"] + '_' + objJSON[key]["ADR"];
         let Label = document.createElement('div');
         Label.className = objJSON[key]["PINTYPE"] + "Label";
         Label.innerHTML = 'ADR:&nbsp;' + objJSON[key]["ADR"] + '<br>HWObj:&nbsp;' + objJSON[key]["HWObj"];
@@ -683,15 +685,15 @@ function init() {
     window.chrome.webview.addEventListener('message', messageHandler);
     addControlsListeners();
     /*
-    document.addEventListener("contextmenu", function(e) {
-        e.preventDefault();
-    });
-    */
-    document.addEventListener("keydown", function(e) {
-        if (e.key === 'Escape') sendgcode('alarm');
-        document.body.disabled = true;
-    });
-
+        document.addEventListener("contextmenu", function(e) {
+            e.preventDefault();
+        });
+    
+        document.addEventListener("keydown", function(e) {
+            if (e.key === 'Escape') sendgcode('alarm');
+            document.body.disabled = true;
+        });
+        */
     //let viewportItemsCapacity = Math.round(window.innerHeight / itemHeight);
     //addUIListeners();
     //getMoreHistoryItems(viewportItemsCapacity);
