@@ -229,6 +229,7 @@ class MHandler {
       DynamicJsonDocument doc(4096);
       doc["status"] = this->status;
       doc["prg_id"] = this->prg_id;
+      doc["default_on"] = this->on;
       for(std::vector<Machine*>::iterator it = M.begin(); it != M.end(); ++it){
         uint8_t mchnum = (*it)->get_machinenum();
         doc["state"][mchnum]["machine"] = mchnum;
