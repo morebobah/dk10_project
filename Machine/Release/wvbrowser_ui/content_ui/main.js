@@ -96,6 +96,7 @@ const messageHandler = event => {
 
 function refreshStatus(objJSON) {
     key_not_pressed = true;
+    let MSW = {};
     out('prg_id=' + objJSON['prg_id']);
     started_prg = objJSON['prg_id'];
     default_on = objJSON['default_on'] == 1;
@@ -103,31 +104,26 @@ function refreshStatus(objJSON) {
     var keys = Object.keys(objJSON['state']);
     keys.forEach(function(mach_num) {
         let mC = objJSON['state'][mach_num]['machine'];
+        MSW['unknown'] = false;
         objJSON['state'][mach_num]['pins'].forEach(function(pin_obj) {
-            let ico = document.getElementById('ico_' + mC + '_' + pin_obj['type'] + '_' + pin_obj['pin']);
-            if (pin_obj['type'] == 'M') {
-                if (pin_obj['value'] == default_on) {
-                    ico.style.backgroundImage = 'url(img/small_smotor_run.gif)';
-                } else {
-                    ico.style.backgroundImage = 'url(img/small_smotor.png)';
-                }
-            }
-
-            if (pin_obj['type'] == 'S') {
-                if (pin_obj['value'] == default_on) {
-                    ico.style.backgroundImage = 'url(img/small_sensor_run.png)';
-                } else {
-                    ico.style.backgroundImage = 'url(img/small_sensor.png)';
-                }
-            }
-
             if (pin_obj['type'] == 'W') {
-                if (pin_obj['value'] >= 0) {
-                    ico.style.backgroundImage = 'url(img/small_weigter_run.png)';
-                } else {
-                    ico.style.backgroundImage = 'url(img/small_weigter.png)';
-                }
+                MSW[pin_obj['type'] + pin_obj['pin']] = pin_obj['value'];
+            } else {
+                MSW[pin_obj['type'] + pin_obj['pin']] = (pin_obj['value'] == default_on);
             }
+        });
+        out(document.getElementById('machine_' + mC));
+        Array.from(document.getElementById('machine_' + mC).getElementsByClassName('MIco')).forEach(function(pins) {
+            pins.style.backgroundImage = (MSW[pins.getAttribute("widget_id")]) ? 'url(img/small_smotor_run.gif)' : 'url(img/small_smotor.png)';
+        });
+        Array.from(document.getElementById('machine_' + mC).getElementsByClassName('SIco')).forEach(function(pins) {
+            pins.style.backgroundImage = (MSW[pins.getAttribute("widget_id")]) ? 'url(img/small_sensor_run.png)' : 'url(img/small_sensor.png)';
+        });
+        Array.from(document.getElementById('machine_' + mC).getElementsByClassName('WIco')).forEach(function(pins) {
+            pins.style.backgroundImage = (MSW[pins.getAttribute("widget_id")] >= 0) ? 'url(img/small_weigher_run.png)' : 'url(img/small_weigher.png)';
+        });
+        Array.from(document.getElementById('machine_' + mC).getElementsByClassName('WDat')).forEach(function(pins) {
+            pins.innerHTML = (MSW[pins.getAttribute("widget_id")] >= 0) ? MSW[pins.getAttribute("widget_id")] : '0';
         });
     });
 }
@@ -495,7 +491,8 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
         pinControl.id = 'pin[' + objJSON[key]["ADR"] + ']';
         let icoPin = document.createElement('div');
         icoPin.className = objJSON[key]["PINTYPE"] + "Ico";
-        icoPin.id = 'ico_' + machine + '_' + objJSON[key]["PINTYPE"] + '_' + objJSON[key]["ADR"];
+        //icoPin.id = 'ico' + objJSON[key]["PINTYPE"] + objJSON[key]["ADR"];
+        icoPin.setAttribute("widget_id", objJSON[key]["PINTYPE"] + objJSON[key]["ADR"]);
         let Label = document.createElement('div');
         Label.className = objJSON[key]["PINTYPE"] + "Label";
         Label.innerHTML = 'ADR:&nbsp;' + objJSON[key]["ADR"] + '<br>HWObj:&nbsp;' + objJSON[key]["HWObj"];
@@ -597,7 +594,8 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
             icoUpd.className = objJSON[key]["PINTYPE"] + "Upd";
             let shildData = document.createElement('div');
             shildData.className = objJSON[key]["PINTYPE"] + "Data";
-            shildData.innerHTML = 'Вес: 0 кг<br>';
+            shildData.id = 'wei' + objJSON[key]["ADR"] + '_' + objJSON[key]["HWObj"];
+            shildData.innerHTML = 'Вес: <span class="WDat" widget_id="' + objJSON[key]["PINTYPE"] + objJSON[key]["ADR"] + '">0</span> кг<br>';
             let inputData = document.createElement('input');
             inputData.className = objJSON[key]["PINTYPE"] + "input";
             inputData.id = 'W' + machine + objJSON[key]["PINTYPE"];
@@ -685,15 +683,15 @@ function init() {
     window.chrome.webview.addEventListener('message', messageHandler);
     addControlsListeners();
     /*
-        document.addEventListener("contextmenu", function(e) {
-            e.preventDefault();
-        });
+            document.addEventListener("contextmenu", function(e) {
+                e.preventDefault();
+            });
     
-        document.addEventListener("keydown", function(e) {
-            if (e.key === 'Escape') sendgcode('alarm');
-            document.body.disabled = true;
-        });
-        */
+            document.addEventListener("keydown", function(e) {
+                if (e.key === 'Escape') sendgcode('alarm');
+                document.body.disabled = true;
+            });
+            */
     //let viewportItemsCapacity = Math.round(window.innerHeight / itemHeight);
     //addUIListeners();
     //getMoreHistoryItems(viewportItemsCapacity);
