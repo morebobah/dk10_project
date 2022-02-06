@@ -28,7 +28,7 @@ class Weigher : public Pin {
     uint8_t m_adr;
     HardwareSerial *m_serial;
 
-    Weigher(HardwareSerial *serial_, uint8_t adr_) : Pin(0,0, WEIGHER){
+    Weigher(HardwareSerial *serial_, uint8_t adr_) : Pin(0, adr_, WEIGHER){
       this->m_adr = adr_;
       this->m_serial = serial_;
 
