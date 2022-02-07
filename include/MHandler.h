@@ -234,17 +234,14 @@ class MHandler {
         uint8_t mchnum = (*it)->get_machinenum();
         doc["state"][mchnum]["machine"] = mchnum;
         std::vector<Pin *>  P = (*it)->pins();
-        uint8_t ipin = 0;
         for(std::vector<Pin*>::iterator pit = P.begin(); pit != P.end(); ++pit){
-          doc["state"][mchnum]["pins"][ipin]["pin"] = (*pit)->get_pin();
           uint8_t tpin = (*pit)->get_type();
-          doc["state"][mchnum]["pins"][ipin]["type"] = result.substring(tpin, tpin + 1);
+          String key = result.substring(tpin, tpin + 1) + String((*pit)->get_pin());
           if(tpin==WEIGHER){
-            doc["state"][mchnum]["pins"][ipin]["value"] = ((Weigher *)(*pit))->getV();
+            doc["state"][mchnum]["pins"][key] = ((Weigher *)(*pit))->getV();
           }else{
-            doc["state"][mchnum]["pins"][ipin]["value"] = (*pit)->get_state();
+            doc["state"][mchnum]["pins"][key] = (*pit)->get_state();
           }
-          ipin++;
         }
       };
       result = "";
@@ -271,17 +268,17 @@ class MHandler {
     
     void inprogress(std::vector<COMMAND> &current_queue){
       String result;
+      String key;
       bool bSend = false;
       for(std::vector<COMMAND>::iterator it = current_queue.begin(); it != current_queue.end(); ++it){
         DynamicJsonDocument doc(4096);
         doc["state"][0]["machine"] = (*it).machine;
-        doc["state"][0]["pins"][0]["pin"] = (*it).pin;
         switch((*it).type){
           case 1:
           if(((*it).time_start +  1000 * (*it).time)<millis() and current_queue.size()<2){
             this->M.at((*it).machine)->at((*it).pin)->set_state((*it).value);
-            doc["state"][0]["pins"][0]["type"] = "M";
-            doc["state"][0]["pins"][0]["value"] = this->M.at((*it).machine)->at((*it).pin)->get_state();
+            key = "M" + String(this->M.at((*it).machine)->at((*it).pin)->get_pin());
+            doc["state"][0]["pins"][key] = this->M.at((*it).machine)->at((*it).pin)->get_state();
             bSend = true;
             current_queue.pop_back();
             this->next_command();
@@ -289,16 +286,16 @@ class MHandler {
           break;
           case 2:
             if((bool)((*it).value) == this->M.at((*it).machine)->at((*it).pin)->get_state()){
-              doc["state"][0]["pins"][0]["type"] = "S";
-              doc["state"][0]["pins"][0]["value"] = this->M.at((*it).machine)->at((*it).pin)->get_state();
+              key = "S" + String(this->M.at((*it).machine)->at((*it).pin)->get_pin());
+              doc["state"][0]["pins"][key] = this->M.at((*it).machine)->at((*it).pin)->get_state();
               bSend = true;
               current_queue.erase(it);
             }
             break;
           case 4:
             int weight = ((Weigher *)(this->M.at((*it).machine)->at((*it).pin)))->getV();
-            doc["state"][0]["pins"][0]["type"] = "W";
-            doc["state"][0]["pins"][0]["value"] = weight;
+            key = "W" + String(this->M.at((*it).machine)->at((*it).pin)->get_pin());
+            doc["state"][0]["pins"][key] = weight;
             bSend = true;
             if(weight>=(*it).value or weight<0){
               current_queue.erase(it);
