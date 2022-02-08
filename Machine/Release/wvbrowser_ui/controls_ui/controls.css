@@ -159,3 +159,43 @@ input:checked+.slider:before {
 .slider.round:before {
     border-radius: 50%;
 }
+
+.tabs_on_panel {
+    display: flex;
+    flex-direction: row;
+    min-width: 100px;
+    height: 100%-5px;
+    margin: 0 0 -1px 5px;
+    padding: 5px 5px;
+    font-weight: 50;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    color: #aaa;
+    border: 0px solid #7BA7AB;
+    border-width: 1px 1px 1px 1px;
+    background: rgb(245, 245, 245);
+    border-radius: 3px 3px 0 0;
+}
+
+.tabs_on_panel_checked {
+    display: flex;
+    flex-direction: row;
+    min-width: 100px;
+    height: 100%-5px;
+    margin: 0 0 -1px 5px;
+    padding: 5px 5px;
+    font-weight: 50;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    color: #555;
+    border-top: 3px solid #7BA7AB;
+    border-bottom: 1px solid rgb(245, 245, 245);
+    border-width: 1px 1px 1px 1px;
+    background: rgb(245, 245, 245);
+    border-radius: 3px 3px 0 0;
+}
+
+.tabs_on_panel:hover {
+    color: #888;
+    cursor: pointer;
+}

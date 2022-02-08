@@ -252,6 +252,20 @@ function refreshControls() {
     addControlsListeners();
 }
 
+function tabsOff() {
+    Array.from(document.getElementsByClassName('tabs_on_panel_checked')).forEach(function(item) {
+        item.className = 'tabs_on_panel';
+    });
+}
+
+function changeTab(tabid) {
+    var message = {
+        message: commands.MG_SWITCH_TAB,
+        args: { tabid: tabid }
+    };
+    window.chrome.webview.postMessage(message);
+}
+
 function refreshTabs() {
     let tabsStrip = document.getElementById('tabs-strip');
     if (tabsStrip) {
@@ -260,20 +274,41 @@ function refreshTabs() {
 
     tabsStrip = document.createElement('div');
     tabsStrip.id = 'tabs-strip';
+    let TabButton1 = document.createElement('div');
+    TabButton1.className = 'tabs_on_panel';
+    TabButton1.id = 'tab1';
+    TabButton1.innerText = 'Автоматический режим';
+    tabsStrip.append(TabButton1);
 
-    let newTabButton = document.createElement('div');
-    newTabButton.id = 'btn-new-tab';
+    let TabButton2 = document.createElement('div');
+    TabButton2.className = 'tabs_on_panel';
+    TabButton2.id = 'tab2';
+    TabButton2.innerText = 'Ручной режим';
+    tabsStrip.append(TabButton2);
 
-    let buttonSpan = document.createElement('span');
-    buttonSpan.textContent = '+';
-    buttonSpan.id = 'plus-label';
-    tabsStrip.append(newTabButton);
+    let TabButton3 = document.createElement('div');
+    TabButton3.className = 'tabs_on_panel';
+    TabButton3.id = 'tab3';
+    TabButton3.innerText = 'Конфигурация';
+    tabsStrip.append(TabButton3);
+
+    let TabButton4 = document.createElement('div');
+    TabButton4.className = 'tabs_on_panel';
+    TabButton4.id = 'tab4';
+    TabButton4.innerText = 'Отладка';
+    tabsStrip.append(TabButton4);
 
     let bodyElement = document.getElementsByTagName('body')[0];
     bodyElement.append(tabsStrip);
+    document.getElementById(localStorage.getItem('tabid') || 'tab1').className = 'tabs_on_panel_checked';
 
-    Array.from(tabs).map((tabEntry) => {
-        loadTabUI(tabEntry[0]);
+    Array.from(document.querySelectorAll('.tabs_on_panel,.tabs_on_panel_checked')).forEach(function(item) {
+        item.addEventListener('click', function(e) {
+            tabsOff();
+            e.target.className = 'tabs_on_panel_checked';
+            localStorage.setItem('tabid', e.target.id);
+            changeTab(e.target.id);
+        });
     });
 }
 

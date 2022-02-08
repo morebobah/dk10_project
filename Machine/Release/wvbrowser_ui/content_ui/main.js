@@ -85,6 +85,11 @@ const messageHandler = event => {
         case commands.MG_DIRECT_SWITCHER:
             bDirect = !bDirect;
             break;
+        case commands.MG_SWITCH_TAB:
+            let input = document.getElementById(event.data.args.tabid);
+            input.checked = true;
+            localStorage.setItem('tabid', event.data.args.tabid);
+            break;
         case commands.MG_CLEAR_LIST:
             clearlist();
             break;
@@ -678,6 +683,8 @@ function init() {
     refreshRecord();
     window.chrome.webview.addEventListener('message', messageHandler);
     addControlsListeners();
+    document.getElementById(localStorage.getItem('tabid') || 'tab1').checked = true;
+
     /*
                 document.addEventListener("contextmenu", function(e) {
                     e.preventDefault();
