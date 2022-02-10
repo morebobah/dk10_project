@@ -88,10 +88,19 @@ const messageHandler = event => {
             window.localStorage.setItem('IPPort', document.getElementById('port-field').value);
             document.getElementById('ip-field').setAttribute("disabled", true);
             document.getElementById('port-field').setAttribute("disabled", true);
+            tabsOff();
+            Array.from(document.getElementsByClassName('tabs_on_panel')).forEach(function(item) {
+                item.style.display = 'flex';
+            });
+            document.getElementById(localStorage.getItem('tabid') || 'tab0').className = 'tabs_on_panel_checked';
+            changeTab(localStorage.getItem('tabid') || 'tab0');
             break;
         case commands.MG_SOCKET_DISCONNECT:
             document.getElementById('ip-field').removeAttribute("disabled");
             document.getElementById('port-field').removeAttribute("disabled");
+            Array.from(document.querySelectorAll('.tabs_on_panel,.tabs_on_panel_checked')).forEach(function(item) {
+                if (item.id != 'tab0') item.style.display = 'none';
+            });
             break;
         default:
             console.log(`Received unexpected message: ${JSON.stringify(event.data)}`);
@@ -274,33 +283,43 @@ function refreshTabs() {
 
     tabsStrip = document.createElement('div');
     tabsStrip.id = 'tabs-strip';
+    let TabButton0 = document.createElement('div');
+    TabButton0.className = 'tabs_on_panel';
+    TabButton0.id = 'tab0';
+    TabButton0.innerText = 'О программе';
+    tabsStrip.append(TabButton0);
+
     let TabButton1 = document.createElement('div');
     TabButton1.className = 'tabs_on_panel';
     TabButton1.id = 'tab1';
     TabButton1.innerText = 'Автоматический режим';
+    TabButton1.style.display = 'none';
     tabsStrip.append(TabButton1);
 
     let TabButton2 = document.createElement('div');
     TabButton2.className = 'tabs_on_panel';
     TabButton2.id = 'tab2';
     TabButton2.innerText = 'Ручной режим';
+    TabButton2.style.display = 'none';
     tabsStrip.append(TabButton2);
 
     let TabButton3 = document.createElement('div');
     TabButton3.className = 'tabs_on_panel';
     TabButton3.id = 'tab3';
     TabButton3.innerText = 'Конфигурация';
+    TabButton3.style.display = 'none';
     tabsStrip.append(TabButton3);
 
     let TabButton4 = document.createElement('div');
     TabButton4.className = 'tabs_on_panel';
     TabButton4.id = 'tab4';
     TabButton4.innerText = 'Отладка';
+    TabButton4.style.display = 'none';
     tabsStrip.append(TabButton4);
 
     let bodyElement = document.getElementsByTagName('body')[0];
     bodyElement.append(tabsStrip);
-    document.getElementById(localStorage.getItem('tabid') || 'tab1').className = 'tabs_on_panel_checked';
+    document.getElementById(localStorage.getItem('tabid') || 'tab0').className = 'tabs_on_panel_checked';
 
     Array.from(document.querySelectorAll('.tabs_on_panel,.tabs_on_panel_checked')).forEach(function(item) {
         item.addEventListener('click', function(e) {

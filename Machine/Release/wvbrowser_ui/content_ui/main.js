@@ -404,12 +404,79 @@ function refreshAuto(objJSON) {
 }
 
 function refreshRecord() {
+    let recControls = document.getElementById('record_ctrl');
+
+    let insButton = document.createElement('div');
+    insButton.className = 'btn';
+    insButton.id = 'btn-ins';
+    insButton.title = 'Insert mode';
+    recControls.append(insButton);
+
+    let upButton = document.createElement('div');
+    upButton.className = 'btn';
+    upButton.id = 'btn-up';
+    upButton.title = 'Up cursor';
+    recControls.append(upButton);
+
+    let downButton = document.createElement('div');
+    downButton.className = 'btn';
+    downButton.id = 'btn-down';
+    downButton.title = 'Down cursor';
+    recControls.append(downButton);
+
+    let openButton = document.createElement('div');
+    openButton.className = 'btn';
+    openButton.id = 'btn-open';
+    openButton.title = 'Open json';
+    recControls.append(openButton);
+
+    let saveButton = document.createElement('div');
+    saveButton.className = 'btn';
+    saveButton.id = 'btn-save';
+    saveButton.title = 'Save json';
+    recControls.append(saveButton);
+
+    /*
     let mainBar = document.getElementById('handBar');
     let recordsBar = document.createElement('div');
     recordsBar.className = 'record';
     recordsBar.id = 'recordsBar';
     mainBar.append(recordsBar);
+    
+    document.getElementById('recordBar-sticker').addEventListener('click', function(e) {
+        let panel = document.getElementById('rBar');
+        if (panel.getAttribute('visible')) {
+            panel.animate([{ left: '-360px' }, { left: '-320px' }, { left: '-280px' },
+                { left: '-240px' }, { left: '-200px' }, { left: '-160px' },
+                { left: '-120px' }, { left: '-80px' }, { left: '-40px' }
+            ], 500).onfinish = function(e) {
+                panel.style.left = 0;
+                panel.removeAttribute('visible');
+            };
+        } else {
+            panel.animate([{ left: '-40px' }, { left: '-80px' }, { left: '-120px' },
+                { left: '-160px' }, { left: '-200px' }, { left: '-240px' },
+                { left: '-280px' }, { left: '-320px' }, { left: '-360px' }
+            ], 500).onfinish = function(e) {
+                panel.style.left = '-400px';
+                panel.setAttribute('visible', '0');
+            };
+        }
+    });
+    */
+}
 
+function gcl(gc_line) {
+    let item = document.createElement('div');
+    item.className = 'gcode_item';
+    let item_cursor = document.createElement('div');
+    item_cursor.className = 'gcode_label';
+    item.append(item_cursor);
+    let item_value = document.createElement('div');
+    item_value.className = 'gcode';
+    item_value.innerText = gc_line;
+    item.append(item_value);
+    return item;
 }
 
 function refreshPanel(objJSON) {
@@ -576,16 +643,10 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
                     gcode += '0';
                 }
                 gcode += pinum + 'V0';
-                let recordBar = document.getElementById('recordsBar');
-                let gRec = document.createElement('div');
-                gRec.className = 'gcode';
-                if (bDirect) {
-                    gRec.innerHTML = sendgcode(gcode);
-                } else {
-                    gRec.innerHTML = gcode;
-                }
+                let crr = document.getElementById('current_cursor');
+                document.getElementById('recordsBar').insertBefore(gcl(gcode), crr);
+                if (bDirect) sendgcode(gcode);
                 gcode = '';
-                recordBar.append(gRec);
             });
         }
 
@@ -683,7 +744,11 @@ function init() {
     refreshRecord();
     window.chrome.webview.addEventListener('message', messageHandler);
     addControlsListeners();
-    document.getElementById(localStorage.getItem('tabid') || 'tab1').checked = true;
+    let tab = document.getElementById(localStorage.getItem('tabid') || 'tab0');
+    if (!tab.style.display) {
+        tab = document.getElementById('tab0');
+    }
+    tab.checked = true;
 
     /*
                 document.addEventListener("contextmenu", function(e) {

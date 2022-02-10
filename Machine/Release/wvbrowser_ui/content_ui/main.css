@@ -2,8 +2,10 @@
     min-height: 100%;
     min-width: 100%;
     padding: 0px;
+    /*
     margin: 0 auto;
     float: left;
+    */
 }
 
 .tabs>section {
@@ -75,6 +77,8 @@
 
 /* Шрифт-иконки от Font Awesome в формате Unicode */
 
+
+/*
 .tabs>label:before {
     font-family: fontawesome;
     font-weight: normal;
@@ -100,6 +104,7 @@
 .tabs>label[for*="5"]:before {
     content: "\f238";
 }
+*/
 
 
 /* Изменения стиля переключателей вкладок при наведении */
@@ -122,6 +127,7 @@
 
 /* Активация секций с помощью псевдокласса :checked */
 
+#tab0:checked~#content-tab0,
 #tab1:checked~#content-tab1,
 #tab2:checked~#content-tab2,
 #tab3:checked~#content-tab3,
@@ -207,26 +213,94 @@
     margin-left: 10px;
 }
 
-.record {
+
+/*start of panel*/
+
+#rBar {
     display: flex;
+    flex-direction: row;
+    /*
+    
+    top: 40px;
+    left: 0px;
+    margin: -40px 0 0 0;
+    overflow: hidden;
+    */
+}
+
+.rbody {
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    height: calc(100% - 3px);
+    background: #EEE;
+    overflow: hidden;
+}
+
+.rlabel {
+    width: 20px;
+    height: 100%;
+    color: white;
+    background-color: rgb(151, 151, 247);
+    cursor: pointer;
+}
+
+div.lbl {
+    transform-origin: 10 20;
+    transform: rotate(90deg);
+}
+
+.rctrls {
+    width: 299px;
+    min-height: 40px;
+    background: #EEE;
+    border: 1px dashed #555;
+}
+
+.record {
+    display: block;
     flex-direction: column;
     align-items: flex-start;
     width: 300px;
-    min-height: 100%;
+    height: 100%;
     background-color: white;
     border: none;
-    box-shadow: 0 0 3px dodgerblue;
-    overflow-y: scroll;
-    overflow-x: hidden;
+    /**/
+    overflow: hidden;
 }
 
-.gcode {
+.gcode_label {
+    width: 10px;
+    min-height: 100%;
+    background-color: rgb(41, 163, 233);
+}
+
+.gcode_cursor {
+    width: 10px;
+    min-height: 100%;
+    background-color: rgb(233, 220, 41);
+    background-image: url('img/cursors.png');
+}
+
+.cursor {
+    display: flex;
+    width: 100%;
+    height: 20px;
+    background-color: rgb(233, 220, 41);
+}
+
+.gcode_item {
+    display: flex;
+    flex-direction: row;
     width: 100%;
 }
 
-.gcode:hover {
-    border: 1px solid black;
+.gcode_item:hover {
+    border-bottom: 1px solid dodgerblue;
 }
+
+
+/*end of panel*/
 
 .machine {
     display: flex;
@@ -743,4 +817,44 @@ input:checked+.slider:before {
     font-size: xx-small;
     border: 0px;
     border-bottom: 1px solid dodgerblue;
+}
+
+.btn,
+.btn-disabled,
+.btn-cancel,
+.btn-active {
+    display: inline-block;
+    border: none;
+    margin: 5px 0;
+    border-radius: 5px;
+    outline: none;
+    height: 30px;
+    width: 30px;
+    background-size: 100%;
+}
+
+.btn:hover,
+.btn-cancel:hover,
+.btn-active {
+    background-color: rgb(200, 200, 200);
+}
+
+#btn-ins {
+    background-image: url('img/insert_btn.png');
+}
+
+#btn-up {
+    background-image: url('img/up_btn.png');
+}
+
+#btn-down {
+    background-image: url('img/down_btn.png');
+}
+
+#btn-open {
+    background-image: url('img/open_btn.png');
+}
+
+#btn-save {
+    background-image: url('img/save_btn.png');
 }

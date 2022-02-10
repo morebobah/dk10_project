@@ -1,7 +1,6 @@
 <html>
 
 <head>
-    <title>History</title>
     <link rel="shortcut icon" href="img/history.png">
     <link rel="stylesheet" type="text/css" href="styles.css">
     <link rel="stylesheet" type="text/css" href="items.css">
@@ -10,32 +9,44 @@
 
 <body>
     <div class='tabs'>
-        <input id="tab1" type="radio" name="tabs" checked>
-        <!--<label for="tab1" title="automatic">Автоматический режим</label>-->
+        <input id="tab0" type="radio" name="tabs" checked>
+        <input id="tab1" type="radio" name="tabs">
         <input id="tab2" type="radio" name="tabs">
-        <!--<label for="tab2" title="handomatic">Ручной режим</label>-->
         <input id="tab3" type="radio" name="tabs">
         <input id="tab4" type="radio" name="tabs">
+        <!--<label for="tab1" title="automatic">Автоматический режим</label>-->
+        <!--<label for="tab2" title="handomatic">Ручной режим</label>-->
+
+        <section id="content-tab0">
+            <p>Программа управления станками.</p>
+        </section>
         <section id="content-tab1">
             <div id='autoBar' class='bars'></div>
         </section>
         <section id="content-tab2">
             <div id='handBar' class='barsControls'>
-            </div>
+                <div id="rBar">
+                    <div class='rbody'>
+                        <div class='rctrls' id='record_ctrl'></div>
+                        <div class='record' id='recordsBar'>
+                            <div class='cursor' id='current_cursor'>
+                                <div class='gcode_cursor'></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='rlabel'>
+                        <div class='lbl'>Code</div>
+                    </div>
+                </div>
         </section>
         <section id="content-tab3">
         </section>
         <section id="content-tab4">
-            <div id='logBar' class='logs'>
-            </div>
+            <div id='logBar' class='logs'></div>
         </section>
         <script src="../commands.js"></script>
         <script src="jquery-3.6.0.min.js"></script>
         <script src="main.js"></script>
-        <!--
-    <input type="button" value="Один" onclick='javascript: initSocket();'>
-    <input type="button" value="Два" onclick='javascript: sendText();'>
-    -->
-    </div>
+        </div>
 
 </html>
