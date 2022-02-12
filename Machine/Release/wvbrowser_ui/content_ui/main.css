@@ -858,3 +858,32 @@ input:checked+.slider:before {
 #btn-save {
     background-image: url('img/save_btn.png');
 }
+
+.ordinary_text {
+    float: left;
+    margin: 0 30px 10px 0;
+}
+
+
+/*Ссылки*/
+
+a {
+    font-size: 1.5rem;
+    color: #383838;
+    text-decoration: none;
+    border-bottom: 1px dashed #eee;
+    -webkit-transition: border 2s, color 2s, -webkit-transform 2s;
+    transition: border 2s, color 2s, transform 2s;
+}
+
+a:hover {
+    color: #00aeff;
+    border-bottom: 1px dashed #00aeff;
+}
+
+.welcome {
+    margin-bottom: 100px;
+}
+
+
+/*Ссылки*/

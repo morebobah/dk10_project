@@ -12,6 +12,7 @@ let timerId = 0;
 var key_not_pressed = true;
 var started_prg = 0;
 var default_on = true;
+var binsert = true;
 
 function out(msg) {
     console.log(msg);
@@ -403,6 +404,16 @@ function refreshAuto(objJSON) {
     setAutoPrgEvents();
 }
 
+function cursorPos(cup = true) {
+    let crr = document.getElementById('current_cursor');
+    if (cup) {
+        if (crr !== crr.parentElement.firstChild)
+            crr.parentElement.insertBefore(crr, crr.previousElementSibling);
+    } else {
+        crr.parentElement.insertBefore(crr, crr.nextElementSibling.nextElementSibling);
+    }
+}
+
 function refreshRecord() {
     let recControls = document.getElementById('record_ctrl');
 
@@ -410,6 +421,7 @@ function refreshRecord() {
     insButton.className = 'btn';
     insButton.id = 'btn-ins';
     insButton.title = 'Insert mode';
+    if (binsert) insButton.style.border = '1px solid black';
     recControls.append(insButton);
 
     let upButton = document.createElement('div');
@@ -436,34 +448,40 @@ function refreshRecord() {
     saveButton.title = 'Save json';
     recControls.append(saveButton);
 
-    /*
-    let mainBar = document.getElementById('handBar');
-    let recordsBar = document.createElement('div');
-    recordsBar.className = 'record';
-    recordsBar.id = 'recordsBar';
-    mainBar.append(recordsBar);
-    
-    document.getElementById('recordBar-sticker').addEventListener('click', function(e) {
-        let panel = document.getElementById('rBar');
-        if (panel.getAttribute('visible')) {
-            panel.animate([{ left: '-360px' }, { left: '-320px' }, { left: '-280px' },
-                { left: '-240px' }, { left: '-200px' }, { left: '-160px' },
-                { left: '-120px' }, { left: '-80px' }, { left: '-40px' }
-            ], 500).onfinish = function(e) {
-                panel.style.left = 0;
-                panel.removeAttribute('visible');
-            };
+    insButton.addEventListener('click', function(e) {
+        binsert = !binsert;
+        if (binsert) {
+            e.target.style.border = '1px solid black';
         } else {
-            panel.animate([{ left: '-40px' }, { left: '-80px' }, { left: '-120px' },
-                { left: '-160px' }, { left: '-200px' }, { left: '-240px' },
-                { left: '-280px' }, { left: '-320px' }, { left: '-360px' }
-            ], 500).onfinish = function(e) {
-                panel.style.left = '-400px';
-                panel.setAttribute('visible', '0');
-            };
+            e.target.style.border = 'none';
         }
     });
-    */
+
+    upButton.addEventListener('click', e => cursorPos(true));
+
+    downButton.addEventListener('click', e => cursorPos(false));
+
+    document.addEventListener("keydown", function(e) {
+        if (localStorage.getItem('tabid') === 'tab2') {
+            if (e.key === 'ArrowUp') cursorPos(true);
+            if (e.key === 'ArrowDown') cursorPos(false);
+        }
+    });
+
+    document.getElementById('recordsBar').addEventListener('click', function(e) {
+        let crr = document.getElementById('current_cursor');
+        if (e.target.className === 'gcode_item') {
+            crr.parentElement.insertBefore(crr, e.target.nextElementSibling);
+        }
+    });
+
+    saveButton.addEventListener('click', function(e) {
+        result = '';
+        let rBar = document.getElementById('recordsBar');
+        Array.from(rBar.getElementsByClassName('gcode')).forEach(item => {
+            result = result + item.innerText;
+        });
+    });
 }
 
 function gcl(gc_line) {
@@ -521,8 +539,17 @@ function refreshPanel(objJSON) {
     mainBar.append(ctrlBar);
 }
 
+function clearPins(node) {
+    Array.from(node.parentElement.parentElement.children).forEach(e => e.style.border = '2px solid #cbcbcb');
+}
+
+function restrictPins(node) {
+    node.parentElement.style.border = '2px solid red';
+}
+
 function refreshPins(ctrlBar, objJSON, machine = 0) {
     //create timer pin
+    let crr = document.getElementById('current_cursor');
     let pinControl = document.createElement('div');
     pinControl.className = 'T';
     pinControl.id = 'Timer' + machine;
@@ -532,7 +559,7 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
     let startCtrl = document.createElement('div');
     startCtrl.className = "TCtrl";
     startCtrl.addEventListener('click', function(e) {
-        let ico = document.getElementById('TIco' + machine);
+        restrictPins(e.target);
         let tinput = document.getElementById('T' + machine);
         if (tinput) {
             gcode = 'G' + machine + 'T' + tinput.value;
@@ -584,25 +611,35 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
                 gcode += '0';
             }
             gcode += pinum + 'V';
+            /*
             let recordBar = document.getElementById('recordsBar');
             let gRec = document.createElement('div');
             gRec.className = 'gcode';
+            */
             if (objJSON[key]["PINTYPE"] == 'W') {
                 let wei = document.getElementById('W' + machine + objJSON[key]["PINTYPE"]);
                 if (wei) {
                     gcode += wei.value;
                 }
+                restrictPins(e.target);
             } else if (objJSON[key]["PINTYPE"] == 'S') {
                 gcode += '1';
+                restrictPins(e.target);
             } else {
                 gcode += '1';
+                document.getElementById('recordsBar').insertBefore(gcl(gcode), crr);
+                if (bDirect) sendgcode(gcode);
+                clearPins(e.target);
+                /*
                 if (bDirect) {
                     gRec.innerHTML = sendgcode(gcode);
                 } else {
                     gRec.innerHTML = gcode;
                 }
-                gcode = '';
                 recordBar.append(gRec);
+                */
+                gcode = '';
+
             }
             /*
             if (checkbox.checked) {
@@ -643,10 +680,10 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
                     gcode += '0';
                 }
                 gcode += pinum + 'V0';
-                let crr = document.getElementById('current_cursor');
                 document.getElementById('recordsBar').insertBefore(gcl(gcode), crr);
                 if (bDirect) sendgcode(gcode);
                 gcode = '';
+                clearPins(e.target);
             });
         }
 
@@ -709,9 +746,8 @@ function sendgcode(code = '') {
     if (code.length == 0) {
         var gcodes = Array.from(document.getElementsByClassName("gcode"));
         gcodes.forEach(div => {
-            divin = div.innerHTML.replace(sended, '');
-            code += divin;
-            div.innerHTML = divin + sended;
+            code += div.innerText;
+            div.previousSibling.style.backgroundColor = '#39e929';
         });
     }
     sendText(code)
