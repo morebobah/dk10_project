@@ -81,6 +81,7 @@ const messageHandler = event => {
             if (ctrlBar) {
                 ctrlBar.remove();
             }
+            document.getElementById('tab0').checked = true;
             clearInterval(timerId);
             break;
         case commands.MG_DIRECT_SWITCHER:
@@ -405,6 +406,7 @@ function refreshAuto(objJSON) {
 }
 
 function cursorPos(cup = true) {
+    Array.from(document.getElementsByClassName('editBox')).forEach(e => { e.remove() });
     let crr = document.getElementById('current_cursor');
     if (cup) {
         if (crr !== crr.parentElement.firstChild)
@@ -436,6 +438,16 @@ function refreshRecord() {
     downButton.title = 'Down cursor';
     recControls.append(downButton);
 
+    let clearButton = document.createElement('div');
+    clearButton.className = 'btn';
+    clearButton.id = 'btn-clear';
+    clearButton.title = 'Reset program';
+    recControls.append(clearButton);
+
+    let separator = document.createElement('div');
+    separator.className = 'btn-separator';
+    recControls.append(separator);
+
     let openButton = document.createElement('div');
     openButton.className = 'btn';
     openButton.id = 'btn-open';
@@ -457,9 +469,37 @@ function refreshRecord() {
         }
     });
 
+    clearButton.addEventListener('click', function(e) {
+        if (confirm("Удалить всю программу из редактора?")) clearlist();
+    });
+
     upButton.addEventListener('click', e => cursorPos(true));
 
     downButton.addEventListener('click', e => cursorPos(false));
+
+    openButton.addEventListener('click', function(e) {
+        parze('G1M00V1G1M01V1G1M02V1G1S03V1+M02V1G1S04V1+M02V1G1M05V1G1M02V1G1M00V1G1M01V1G1M02V1G1W06V3+S03V1+M05V1G2M02V1G2S03V1+M02V1G2T1+M01V1');
+        /*
+        var message = {
+            message: commands.MG_LOAD_PROGRAM,
+            args: {}
+        };
+        window.chrome.webview.postMessage(message);
+        */
+    });
+
+    saveButton.addEventListener('click', function(e) {
+        let send_gcode = '';
+        let prg_name = document.getElementById('main_name');
+        let name_gcode = (Math.random() + 1).toString(36).substring(10);
+        if (prg_name) name_gcode = prg_name.innerText || name_gcode;
+        Array.from(document.getElementsByClassName('gcode')).forEach(item => { send_gcode += item.innerText });
+        var message = {
+            message: commands.MG_SAVE_PROGRAM,
+            args: { prg: name_gcode, gcode: send_gcode }
+        };
+        window.chrome.webview.postMessage(message);
+    });
 
     document.addEventListener("keydown", function(e) {
         if (localStorage.getItem('tabid') === 'tab2') {
@@ -484,9 +524,73 @@ function refreshRecord() {
     });
 }
 
+function edit_div(item) {
+    Array.from(document.getElementsByClassName('editBox')).forEach(e => { e.remove() });
+    var editbox = document.createElement('input');
+    editbox.type = 'textbox';
+    editbox.className = 'editBox';
+    var rect = item.getBoundingClientRect();
+    editbox.style.position = "absolute";
+    editbox.style.zIndex = "999";
+    editbox.style.top = rect.top + "px";
+    editbox.style.left = rect.left + "px";
+    editbox.style.width = (rect.right - rect.left) + "px";
+    editbox.style.height = (rect.bottom - rect.top) + "px";
+    editbox.value = item.innerText;
+    item.parentElement.append(editbox);
+    editbox.addEventListener("keydown", function(e) {
+        if (e.key === 'Escape') {
+            e.target.remove();
+        }
+        if (e.key === 'Enter') {
+            if (String(e.target.value).replace(' ', '').length > 0) {
+                item.innerText = e.target.value;
+                e.target.remove();
+            } else {
+                e.target.style.border = '1px solid red';
+            }
+        }
+    });
+    editbox.addEventListener("focusout", function(e) { e.target.remove(); });
+}
+
+
+function parze(gcodes) {
+    let gcds = String(gcodes);
+    let crr = document.getElementById('current_cursor');
+    from_pos = gcds.indexOf('G');
+    to_pos = gcds.indexOf('G', from_pos + 1);
+    while (to_pos >= 0) {
+        insert_gcode_item(gcl(gcds.substring(from_pos, to_pos)));
+        from_pos = to_pos;
+        to_pos = gcds.indexOf('G', from_pos + 1);
+    }
+    insert_gcode_item(gcl(gcds.substring(from_pos)));
+}
+
+function insert_gcode_item(item) {
+    let bMainName = true;
+    let recBar = document.getElementById('recordsBar');
+    let crr = document.getElementById('current_cursor');
+    Array.from(recBar.getElementsByClassName('prg_label')).forEach(item => { if (item.id === 'main_name') bMainName = false; });
+    if (bMainName) {
+        let prg_label = prgl();
+        recBar.insertBefore(prg_label, recBar.firstChild);
+        prg_label.addEventListener('click', function(e) {
+            edit_div(e.target);
+        });
+    }
+    recBar.insertBefore(item, crr);
+}
+
 function gcl(gc_line) {
     let item = document.createElement('div');
     item.className = 'gcode_item';
+    let item_close = document.createElement('div');
+    item_close.className = 'gcode_close';
+    item_close.innerText = ' ';
+    item.append(item_close);
+    item_close.addEventListener('click', function(e) { e.target.parentElement.remove(); });
     let item_cursor = document.createElement('div');
     item_cursor.className = 'gcode_label';
     item.append(item_cursor);
@@ -494,6 +598,16 @@ function gcl(gc_line) {
     item_value.className = 'gcode';
     item_value.innerText = gc_line;
     item.append(item_value);
+    item_value.addEventListener('click', function(e) { edit_div(e.target); });
+
+    return item;
+}
+
+function prgl(lname = 'Без названия') {
+    let item = document.createElement('div');
+    item.className = 'prg_label';
+    item.id = 'main_name';
+    item.innerText = lname;
     return item;
 }
 
@@ -549,7 +663,6 @@ function restrictPins(node) {
 
 function refreshPins(ctrlBar, objJSON, machine = 0) {
     //create timer pin
-    let crr = document.getElementById('current_cursor');
     let pinControl = document.createElement('div');
     pinControl.className = 'T';
     pinControl.id = 'Timer' + machine;
@@ -603,19 +716,10 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
             } else {
                 gcode = 'G' + machine + objJSON[key]["PINTYPE"];
             }
-            /*
-            var checkbox = document.getElementById('T' + machine + objJSON[key]["ADR"]);
-            var timebox = document.getElementById('Sec' + machine + objJSON[key]["ADR"]);
-            */
             if (pinum < 10) {
                 gcode += '0';
             }
             gcode += pinum + 'V';
-            /*
-            let recordBar = document.getElementById('recordsBar');
-            let gRec = document.createElement('div');
-            gRec.className = 'gcode';
-            */
             if (objJSON[key]["PINTYPE"] == 'W') {
                 let wei = document.getElementById('W' + machine + objJSON[key]["PINTYPE"]);
                 if (wei) {
@@ -627,30 +731,12 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
                 restrictPins(e.target);
             } else {
                 gcode += '1';
-                document.getElementById('recordsBar').insertBefore(gcl(gcode), crr);
+                insert_gcode_item(gcl(gcode));
                 if (bDirect) sendgcode(gcode);
                 clearPins(e.target);
-                /*
-                if (bDirect) {
-                    gRec.innerHTML = sendgcode(gcode);
-                } else {
-                    gRec.innerHTML = gcode;
-                }
-                recordBar.append(gRec);
-                */
                 gcode = '';
 
             }
-            /*
-            if (checkbox.checked) {
-                gcode += '+T' + timebox.value;
-            }
-            var key = e.which || e.keyCode;
-            if (key === 13) { // 13 is enter
-                e.preventDefault();
-                processAddressBarInput();
-            }
-            */
         });
 
         if (objJSON[key]["PINTYPE"] == 'M') {
@@ -680,7 +766,7 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
                     gcode += '0';
                 }
                 gcode += pinum + 'V0';
-                document.getElementById('recordsBar').insertBefore(gcl(gcode), crr);
+                insert_gcode_item(gcl(gcode));
                 if (bDirect) sendgcode(gcode);
                 gcode = '';
                 clearPins(e.target);
@@ -769,7 +855,7 @@ function sendText(txt = "Текстовочка") {
 }
 
 function clearlist() {
-    document.getElementById('recordsBar').innerHTML = "";
+    Array.from(document.getElementById('recordsBar').getElementsByClassName('gcode_item')).forEach(item => { item.remove(); });
 }
 
 function addControlsListeners() {}
@@ -787,15 +873,15 @@ function init() {
     tab.checked = true;
 
     /*
-                document.addEventListener("contextmenu", function(e) {
-                    e.preventDefault();
-                });
+                            document.addEventListener("contextmenu", function(e) {
+                                e.preventDefault();
+                            });
     
-                document.addEventListener("keydown", function(e) {
-                    if (e.key === 'Escape') sendgcode('alarm');
-                    document.body.disabled = true;
-                });
-                */
+                            document.addEventListener("keydown", function(e) {
+                                if (e.key === 'Escape') sendgcode('alarm');
+                                document.body.disabled = true;
+                            });
+                            */
     //let viewportItemsCapacity = Math.round(window.innerHeight / itemHeight);
     //addUIListeners();
     //getMoreHistoryItems(viewportItemsCapacity);

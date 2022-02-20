@@ -4,7 +4,8 @@ const SCHEMED_URI_REGEX = /^\w+:.+$/;
 
 let settings = {
     scriptsEnabled: true,
-    blockPopups: true
+    blockPopups: true,
+    bConnected: false
 };
 
 const messageHandler = event => {
@@ -88,6 +89,8 @@ const messageHandler = event => {
             window.localStorage.setItem('IPPort', document.getElementById('port-field').value);
             document.getElementById('ip-field').setAttribute("disabled", true);
             document.getElementById('port-field').setAttribute("disabled", true);
+            document.getElementById('btn-connect').style.backgroundImage = 'url("img/connect_establish.png")';
+            settings.bConnected = true;
             tabsOff();
             Array.from(document.getElementsByClassName('tabs_on_panel')).forEach(function(item) {
                 item.style.display = 'flex';
@@ -98,9 +101,12 @@ const messageHandler = event => {
         case commands.MG_SOCKET_DISCONNECT:
             document.getElementById('ip-field').removeAttribute("disabled");
             document.getElementById('port-field').removeAttribute("disabled");
+            document.getElementById('btn-connect').removeAttribute("disabled");
             Array.from(document.querySelectorAll('.tabs_on_panel,.tabs_on_panel_checked')).forEach(function(item) {
                 if (item.id != 'tab0') item.style.display = 'none';
             });
+            document.getElementById('btn-connect').style.backgroundImage = 'url("img/connect.png")';
+            settings.bConnected = false;
             break;
         default:
             console.log(`Received unexpected message: ${JSON.stringify(event.data)}`);
@@ -200,7 +206,7 @@ function refreshControls() {
     delButton.className = 'btn';
     delButton.id = 'btn-del';
     delButton.title = 'Clear program list';
-    navControls.append(delButton);
+    //navControls.append(delButton);
 
 
     let saveprgButton = document.createElement('div');
@@ -347,7 +353,7 @@ function addControlsListeners() {
 
 
     document.querySelector('#btn-connect').addEventListener('click', function(e) {
-        if (document.getElementById('btn-connect').className === 'btn') {
+        if (document.getElementById('btn-connect').className === 'btn' && !settings.bConnected) {
             var message = {
                 message: commands.MG_INIT_SOCKET,
                 args: { ipAddr: "ws://" + document.getElementById('ip-field').value + ":" + document.getElementById('port-field').value }
@@ -366,6 +372,7 @@ function addControlsListeners() {
         }
     });
 
+    /*
     document.querySelector('#btn-del').addEventListener('click', function(e) {
         if (document.getElementById('btn-sendprg').className === 'btn') {
             var message = {
@@ -375,6 +382,7 @@ function addControlsListeners() {
             window.chrome.webview.postMessage(message);
         }
     });
+    */
 
     document.querySelector('#btn-switcher').addEventListener('click', function(e) {
         if (e.pointerId == 1) {

@@ -269,17 +269,41 @@ div.lbl {
     overflow: hidden;
 }
 
-.gcode_label {
+.editBox {
+    position: absolute;
+    background-color: #c6e8f8;
+    border: none;
+}
+
+.prg_label {
+    display: flex;
+    flex-direction: row;
+    background-color: #c9c9c9;
+    width: 100%;
+    font-size: small;
+}
+
+.gcode_close {
     width: 10px;
+    min-height: 100%;
+    cursor: pointer;
+    background-image: url('img/close_item.png');
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.gcode_label {
+    width: 20px;
     min-height: 100%;
     background-color: rgb(41, 163, 233);
 }
 
 .gcode_cursor {
-    width: 10px;
+    width: 20px;
     min-height: 100%;
     background-color: rgb(233, 220, 41);
     background-image: url('img/cursors.png');
+    background-repeat: no-repeat;
 }
 
 .cursor {
@@ -833,6 +857,17 @@ input:checked+.slider:before {
     background-size: 100%;
 }
 
+.btn-separator {
+    display: inline-block;
+    border: none;
+    margin: 5px 0;
+    border-radius: 5px;
+    outline: none;
+    height: 30px;
+    width: 10px;
+    background-size: 100%;
+}
+
 .btn:hover,
 .btn-cancel:hover,
 .btn-active {
@@ -849,6 +884,10 @@ input:checked+.slider:before {
 
 #btn-down {
     background-image: url('img/down_btn.png');
+}
+
+#btn-clear {
+    background-image: url('img/delete.png');
 }
 
 #btn-open {
