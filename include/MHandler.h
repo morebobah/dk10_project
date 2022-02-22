@@ -481,6 +481,7 @@ class MHandler {
       this->file_automatic.readStringUntil('G');
       this->bauto = true;
       this->status = MCHN_STATUS::inprocess;
+      this->sendAnswer(this->get_status());
       return this->next_command();
     };
 
