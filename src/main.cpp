@@ -5,7 +5,7 @@
 #define MOTOR_DEBUG
 #define SENSOR_DEBUG
 #define WEI_DEBUG
-#define INI_DEBUG
+//#define INI_DEBUG
 
 
 #include <Arduino.h>
