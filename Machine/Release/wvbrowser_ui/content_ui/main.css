@@ -808,6 +808,14 @@ input:checked+.slider:before {
     transform: translateX(13px);
 }
 
+.prg_sel {
+    position: relative;
+    top: -10px;
+    width: calc(100% - 100px);
+    height: 35px;
+    font-size: x-large;
+}
+
 
 /* Rounded sliders */
 
@@ -896,6 +904,14 @@ input:checked+.slider:before {
 
 #btn-save {
     background-image: url('img/save_btn.png');
+}
+
+#btn-load {
+    background-image: url('img/loadtoesp_btn.png');
+}
+
+#btn-download {
+    background-image: url('img/downloadfromesp_btn.png');
 }
 
 .ordinary_text {

@@ -14,6 +14,10 @@ var started_prg = 0;
 var default_on = true;
 var binsert = true;
 
+let settings = {
+    prg_options: null
+};
+
 function out(msg) {
     console.log(msg);
     let context = '<div class="logline">' + new Date().toLocaleString() + '&nbsp;';
@@ -66,6 +70,18 @@ const messageHandler = event => {
                 if (keys.includes("status")) {
                     out(event.data);
                     refreshStatus(objJSON);
+                }
+                if (keys.includes("downloadprg")) {
+                    let recBar = document.getElementById('recordsBar');
+                    let bIrememebre = (recBar.firstChild.id == 'main_name');
+                    if (bIrememebre) {
+                        let crr = document.getElementById('current_cursor');
+                        recBar.insertBefore(prgl(objJSON['downloadprg']['name']), crr);
+                    }
+                    parze(objJSON['downloadprg']['listing']);
+                    if (!bIrememebre) {
+                        recBar.firstChild.innerText = objJSON['downloadprg']['name'];
+                    }
                 }
             };
             break;
@@ -334,10 +350,21 @@ function refreshAuto(objJSON) {
             }
             if (k == "ID") {
                 optid = 'start_prg' + val[k].toString();
+                seloptid = val[k].toString();
                 optnum = val[k].toString();
                 iNumOption += 2;
             }
             if (iNumOption == 3) {
+                //Start selector
+                let prg_sel = document.getElementById('prg_list');
+                if (prg_sel) {
+                    let o = document.createElement('option');
+                    o.value = seloptid;
+                    o.text = optname;
+                    prg_sel.appendChild(o);
+                }
+
+                //End selector
                 let item_div = document.createElement('div');
                 item_div.className = 'item_auto_prg';
                 item_div.id = optid;
@@ -397,6 +424,15 @@ function refreshAuto(objJSON) {
             }
         });
     });
+    let new_prg = 1;
+    let all_prg = Array.from(document.querySelector("#prg_list").options).map(o => o.value);
+    while (all_prg.includes(new_prg.toString())) {
+        new_prg++;
+    }
+    let opt_new = document.getElementById('opt_new');
+    if (opt_new) {
+        opt_new.value = new_prg.toString();
+    }
 
     ctrlBar.append(mainpanel);
     panels.forEach((item) => { ctrlBar.append(item) });
@@ -418,13 +454,16 @@ function cursorPos(cup = true) {
 
 function refreshRecord() {
     let recControls = document.getElementById('record_ctrl');
+    let recControls2 = document.getElementById('record_ctrl2');
 
+    /* for future futures
     let insButton = document.createElement('div');
     insButton.className = 'btn';
     insButton.id = 'btn-ins';
     insButton.title = 'Insert mode';
     if (binsert) insButton.style.border = '1px solid black';
     recControls.append(insButton);
+    */
 
     let upButton = document.createElement('div');
     upButton.className = 'btn';
@@ -460,14 +499,41 @@ function refreshRecord() {
     saveButton.title = 'Save json';
     recControls.append(saveButton);
 
-    insButton.addEventListener('click', function(e) {
-        binsert = !binsert;
-        if (binsert) {
-            e.target.style.border = '1px solid black';
-        } else {
-            e.target.style.border = 'none';
-        }
-    });
+    let dloadButton = document.createElement('div');
+    dloadButton.className = 'btn';
+    dloadButton.id = 'btn-download';
+    dloadButton.title = 'Download from ESP';
+    recControls2.append(dloadButton);
+
+    let loadButton = document.createElement('div');
+    loadButton.className = 'btn';
+    loadButton.id = 'btn-load';
+    loadButton.title = 'Load to ESP';
+    recControls2.append(loadButton);
+    recControls2.append(separator);
+
+    if (settings.prg_options === null) {
+        settings.prg_options = document.createElement('select');
+        settings.prg_options.className = 'prg_sel';
+        settings.prg_options.id = 'prg_list';
+        let o = document.createElement('option');
+        o.id = 'opt_new';
+        o.value = '0';
+        o.text = 'New';
+        settings.prg_options.appendChild(o);
+        recControls2.append(settings.prg_options);
+    }
+
+    /*
+     insButton.addEventListener('click', function(e) {
+         binsert = !binsert;
+         if (binsert) {
+             e.target.style.border = '1px solid black';
+         } else {
+             e.target.style.border = 'none';
+         }
+     });
+     */
 
     clearButton.addEventListener('click', function(e) {
         if (confirm("Удалить всю программу из редактора?")) clearlist();
@@ -499,6 +565,25 @@ function refreshRecord() {
             args: { prg: name_gcode, gcode: send_gcode }
         };
         window.chrome.webview.postMessage(message);
+    });
+
+    loadButton.addEventListener('click', function(e) {
+        let send_gcode = '';
+        let prg_name = document.getElementById('main_name');
+        let name_gcode = (Math.random() + 1).toString(36).substring(10);
+        if (prg_name) name_gcode = prg_name.innerText || name_gcode;
+        let prg_sel = document.getElementById('prg_list');
+        if (!prg_sel) return;
+        Array.from(document.getElementsByClassName('gcode')).forEach(item => { send_gcode += item.innerText });
+        if (send_gcode.length == 0) return;
+        if (!confirm('Загрузить программу \"' + name_gcode + '\" с идентификатором ' + prg_sel.value + '?\n Существующая программа с таким идентификатором будет перезаписана.')) return;
+        sendgcode('save_prg' + prg_sel.value + '\n' + name_gcode + '\n' + send_gcode);
+    });
+
+    dloadButton.addEventListener('click', function(e) {
+        let prg_sel = document.getElementById('prg_list');
+        if (!prg_sel) return;
+        if (prg_sel.options[prg_sel.selectedIndex].text != 'New') sendgcode('load_prg' + prg_sel.value);
     });
 
     document.addEventListener("keydown", function(e) {
@@ -606,7 +691,8 @@ function gcl(gc_line) {
 function prgl(lname = 'Без названия') {
     let item = document.createElement('div');
     item.className = 'prg_label';
-    item.id = 'main_name';
+    if (!document.getElementById('main_name'))
+        item.id = 'main_name';
     item.innerText = lname;
     return item;
 }
@@ -856,6 +942,7 @@ function sendText(txt = "Текстовочка") {
 
 function clearlist() {
     Array.from(document.getElementById('recordsBar').getElementsByClassName('gcode_item')).forEach(item => { item.remove(); });
+    Array.from(document.getElementById('recordsBar').getElementsByClassName('prg_label')).forEach(item => { if (item.id != 'main_name') item.remove(); });
 }
 
 function addControlsListeners() {}
