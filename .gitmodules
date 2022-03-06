@@ -1,0 +1,3 @@
+[submodule "BricksFactory"]
+	path = BricksFactory
+	url = https://github.com/Krikorov/BricksFactory
