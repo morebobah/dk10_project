@@ -412,7 +412,18 @@ class MHandler {
         return 0; 
       }
 
-      if(strncmp(payload, "save_prg", 8)==0) return 5; //save program to SD
+      if(strncmp(payload, "save_prg", 8)==0){ //save program to SD
+        if(this->newprg((char*)payload))
+          this->sendAnswer(this->listofprg((char*)payload));
+      }
+
+      if(strncmp(payload, "load_prg", 8)==0){ //load program and send to client
+        this->downloadprg((char*)payload);
+        #ifdef MH_DEBUG
+          Serial.println("MH: download prg");
+        #endif
+      }
+
       if(strncmp(payload, "del_prg", 7)==0) return 6; //delete saved program
       if(strncmp(payload, "restore_to_factory_settings[lDDQD]", 34)==0) return 7; //save blank ini file to SD card
 
@@ -465,6 +476,61 @@ class MHandler {
       count_of_command = 0;
       this->gcode = gcode;
       return this->next_command();
+    };
+
+    bool downloadprg(String gcode){
+      DynamicJsonDocument doc(4096);
+      String prgnum = gcode.substring(8);
+      if(prgnum.toInt()==0) return false;
+      String result = "";
+      String prgpath = "/prg[" + prgnum +"].json";
+      String prgname = "";
+      String prglist = "";
+      bool bName = true;
+      File f = SD.open(prgpath);
+      if(!f)return false;
+      while(f.available()){
+        char current = (char)f.read();
+        if(current=='\n'){bName = false;
+        }else{
+          if(current!='\r'){
+            if(bName){
+              prgname += current;
+            }else{
+              prglist += current;
+            }
+          }
+        }
+      }
+      f.close();
+      doc["downloadprg"]["name"] = prgname;
+      doc["downloadprg"]["listing"] = prglist;
+      serializeJson(doc, result);
+      this->sendAnswer(result);
+      return true;
+    };
+
+    bool firmware(String gcode){
+      return true;
+    }
+
+    bool newprg(String gcode){
+      int endofid = gcode.indexOf('\n');
+      int endofname = gcode.indexOf('\n', endofid + 1);
+      String prgnum = gcode.substring(8, endofid);
+      String prgname = gcode.substring(endofid + 1, endofname);
+      String prg_value = gcode.substring(endofname + 1);
+      if(prgnum.toInt()==0) return false;
+      String prgpath = "/prg[" + prgnum +"].json";
+      #ifdef MH_DEBUG
+        Serial.println(prgpath);
+      #endif
+      SD.remove(prgpath);
+      File f = SD.open(prgpath, FILE_WRITE);
+      f.println(prgname);
+      f.println(prg_value);
+      f.close();
+     return true;
     };
 
     bool automatic(String gcode){
