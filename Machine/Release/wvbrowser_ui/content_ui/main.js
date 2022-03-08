@@ -26,6 +26,19 @@ function out(msg) {
     document.getElementById('logBar').innerHTML = context;
 }
 
+function loadfromsource(prg_name, listing) {
+    let recBar = document.getElementById('recordsBar');
+    let bIrememebre = (recBar.firstChild.id == 'main_name');
+    if (bIrememebre) {
+        let crr = document.getElementById('current_cursor');
+        recBar.insertBefore(prgl(prg_name), crr);
+    }
+    parze(listing);
+    if (!bIrememebre) {
+        recBar.firstChild.innerText = prg_name;
+    }
+}
+
 const messageHandler = event => {
     var message = event.data.message;
 
@@ -72,16 +85,7 @@ const messageHandler = event => {
                     refreshStatus(objJSON);
                 }
                 if (keys.includes("downloadprg")) {
-                    let recBar = document.getElementById('recordsBar');
-                    let bIrememebre = (recBar.firstChild.id == 'main_name');
-                    if (bIrememebre) {
-                        let crr = document.getElementById('current_cursor');
-                        recBar.insertBefore(prgl(objJSON['downloadprg']['name']), crr);
-                    }
-                    parze(objJSON['downloadprg']['listing']);
-                    if (!bIrememebre) {
-                        recBar.firstChild.innerText = objJSON['downloadprg']['name'];
-                    }
+                    loadfromsource(objJSON['downloadprg']['name'], objJSON['downloadprg']['listing']);
                 }
             };
             break;
@@ -110,6 +114,9 @@ const messageHandler = event => {
             break;
         case commands.MG_CLEAR_LIST:
             clearlist();
+            break;
+        case commands.MG_LOAD_PROGRAM:
+            loadfromsource(event.data.name, event.data.gcode);
             break;
         default:
             out(`Unexpected message: ${JSON.stringify(event.data)}`);
@@ -544,14 +551,12 @@ function refreshRecord() {
     downButton.addEventListener('click', e => cursorPos(false));
 
     openButton.addEventListener('click', function(e) {
-        parze('G1M00V1G1M01V1G1M02V1G1S03V1+M02V1G1S04V1+M02V1G1M05V1G1M02V1G1M00V1G1M01V1G1M02V1G1W06V3+S03V1+M05V1G2M02V1G2S03V1+M02V1G2T1+M01V1');
-        /*
         var message = {
             message: commands.MG_LOAD_PROGRAM,
             args: {}
         };
         window.chrome.webview.postMessage(message);
-        */
+        //parze('G1M00V1G1M01V1G1M02V1G1S03V1+M02V1G1S04V1+M02V1G1M05V1G1M02V1G1M00V1G1M01V1G1M02V1G1W06V3+S03V1+M05V1G2M02V1G2S03V1+M02V1G2T1+M01V1');
     });
 
     saveButton.addEventListener('click', function(e) {

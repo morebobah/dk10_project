@@ -6,6 +6,7 @@
 
 #include "framework.h"
 
+
 class Tab
 {
 public:
@@ -25,6 +26,7 @@ protected:
     EventRegistrationToken m_securityUpdateToken = {};
     EventRegistrationToken m_messageBrokerToken = {};  // Message broker for browser pages loaded in a tab
     Microsoft::WRL::ComPtr<ICoreWebView2WebMessageReceivedEventHandler> m_messageBroker;
+    HRESULT PostJsonToWebView(web::json::value jsonObj, ICoreWebView2* webview);
 
     HRESULT Init(ICoreWebView2Environment* env, bool shouldBeActive);
     void SetMessageBroker();

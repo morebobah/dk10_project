@@ -4,8 +4,21 @@
 
 #include "MachineWindow.h"
 #include "Tab.h"
+#include <commdlg.h>
 
 using namespace Microsoft::WRL;
+
+DWORD g_BytesTransferred = 0;
+
+VOID CALLBACK FileIOCompletionRoutine(
+    __in  DWORD dwErrorCode,
+    __in  DWORD dwNumberOfBytesTransfered,
+    __in  LPOVERLAPPED lpOverlapped)
+{
+    _tprintf(TEXT("Error code:\t%x\n"), dwErrorCode);
+    _tprintf(TEXT("Number of bytes:\t%x\n"), dwNumberOfBytesTransfered);
+    g_BytesTransferred = dwNumberOfBytesTransfered;
+}
 
 std::unique_ptr<Tab> Tab::CreateNewTab(HWND hWnd, ICoreWebView2Environment* env, size_t id, bool shouldBeActive)
 {
@@ -96,6 +109,105 @@ void Tab::SetMessageBroker()
             //m_contentWebView->ExecuteScript(L"initSocket()", m_uiScriptExecutor.Get());
         }
         break;
+        case MG_LOAD_PROGRAM:
+        {
+            OPENFILENAME ofn;       // common dialog box structure
+            TCHAR szFile[260] = { 0 };       // if using TCHAR macros
+            char   ReadBuffer[BUFFERSIZE] = { 0 };
+            OVERLAPPED ol = { 0 };
+            DWORD  dwBytesRead = 0;
+
+            // Initialize OPENFILENAME
+            ZeroMemory(&ofn, sizeof(ofn));
+            ofn.lStructSize = sizeof(ofn);
+            ofn.hwndOwner = this->m_parentHWnd;
+            ofn.lpstrFile = szFile;
+            ofn.nMaxFile = sizeof(szFile);
+            ofn.lpstrFilter = _T("JSON\0*.json\0All\0*.*\0");
+            ofn.nFilterIndex = 1;
+            ofn.lpstrFileTitle = NULL;
+            ofn.nMaxFileTitle = 0;
+            ofn.lpstrInitialDir = NULL;
+            ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+            web::json::value jsonForSend = web::json::value::parse(L"{}");
+            jsonForSend[L"message"] = web::json::value(MG_LOAD_PROGRAM);
+            //jsonForSend[L"name"] = web::json::value(L"Программа сложной автоматики");
+            //jsonForSend[L"gcode"] = web::json::value(L"G1M00V1G1M01V1G1M02V1G1S03V1+M02V1G1S04V1+M02V1G1M05V1G1M02V1G1M00V1G1M01V1G1M02V1G1W06V3+S03V1+M05V1G2M02V1G2S03V1+M02V1G2T1+M01V1");
+
+            if (GetOpenFileName(&ofn) == TRUE)
+            {
+                HANDLE hFile = ::CreateFile(ofn.lpstrFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile == INVALID_HANDLE_VALUE) {
+                    break;
+                }
+                if (FALSE == ReadFileEx(hFile, ReadBuffer, BUFFERSIZE - 1, &ol, FileIOCompletionRoutine))
+                {
+                    CloseHandle(hFile);
+                    break;
+                }
+                SleepEx(5000, TRUE);
+                dwBytesRead = g_BytesTransferred;
+                if (dwBytesRead > 0 && dwBytesRead <= BUFFERSIZE - 1)
+                {
+                    ReadBuffer[dwBytesRead] = '\0'; // NULL character
+                    //PostJsonToWebView(jsonForSend, m_contentWebView.Get());
+                    DWORD dwPos = 0;
+                    for (DWORD dwI = 0; dwI < dwBytesRead; dwI++) {
+                        if(ReadBuffer[dwI]=='\r')ReadBuffer[dwI] = '\0';
+                        if (ReadBuffer[dwI] == '\n') {
+                            ReadBuffer[dwI] = '\0';
+                            dwPos = dwI + 1;
+                        }
+                    }
+                    jsonForSend[L"name"] = web::json::value(CA2CT(ReadBuffer));
+                    jsonForSend[L"gcode"] = web::json::value(CA2CT(ReadBuffer + dwPos));
+                    PostJsonToWebView(jsonForSend, m_contentWebView.Get());
+                }
+                ::CloseHandle(hFile);
+            }
+            //m_contentWebView->ExecuteScript(L"initSocket()", m_uiScriptExecutor.Get());
+        }
+        break;
+        case MG_SAVE_PROGRAM:
+        {
+            OPENFILENAME ofn;       // common dialog box structure
+            TCHAR szFile[260] = { 0 };       // if using TCHAR macros
+
+            // Initialize OPENFILENAME
+            ZeroMemory(&ofn, sizeof(ofn));
+            ofn.lStructSize = sizeof(ofn);
+            ofn.hwndOwner = this->m_parentHWnd;
+            ofn.lpstrFile = szFile;
+            ofn.nMaxFile = sizeof(szFile);
+            ofn.lpstrFilter = _T("JSON\0*.json\0All\0*.*\0");
+            ofn.nFilterIndex = 1;
+            ofn.lpstrFileTitle = NULL;
+            ofn.nMaxFileTitle = 0;
+            ofn.lpstrInitialDir = NULL;
+            ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+            if (GetSaveFileName(&ofn) == TRUE)
+            {
+                HANDLE hFile = ::CreateFile(ofn.lpstrFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile == INVALID_HANDLE_VALUE) {
+                    break;
+                }
+                DWORD dwBytesWritten = 0;
+                try {
+                    if (!WriteFile(hFile, CT2CA(args[L"prg"].as_string().c_str()), args[L"prg"].as_string().length(), &dwBytesWritten, NULL)) throw 1;
+                    if (!WriteFile(hFile, "\r\n", 2, &dwBytesWritten, NULL))throw 1;
+                    if (!WriteFile(hFile, CT2CA(args[L"gcode"].as_string().c_str()), args[L"gcode"].as_string().length(), &dwBytesWritten, NULL)) throw 1;
+                    MessageBox(this->m_parentHWnd, L"Файл успешно сохранен", L"Сохранение", MB_OK | MB_ICONINFORMATION);
+                }
+                catch (...) {
+                    MessageBox(this->m_parentHWnd, L"Ошибка записи.", L"Error", MB_OK | MB_ICONEXCLAMATION);
+                }
+                
+                ::CloseHandle(hFile);
+            }
+            //m_contentWebView->ExecuteScript(L"initSocket()", m_uiScriptExecutor.Get());
+        }
+        break;
         default:
         {
             OutputDebugString(L"Unexpected message\n");
@@ -116,4 +228,12 @@ HRESULT Tab::ResizeWebView()
     bounds.top += machineWindow->GetDPIAwareBound(MachineWindow::c_uiBarHeight);
 
     return m_contentController->put_Bounds(bounds);
+}
+
+HRESULT Tab::PostJsonToWebView(web::json::value jsonObj, ICoreWebView2* webview)
+{
+    utility::stringstream_t stream;
+    jsonObj.serialize(stream);
+
+    return webview->PostWebMessageAsJson(stream.str().c_str());
 }

@@ -56,3 +56,4 @@ void tryLaunchWindow(HINSTANCE hInstance, int nCmdShow)
         }
     }
 }
+
