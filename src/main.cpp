@@ -1,10 +1,10 @@
-#define MAIN_DEBUG
-#define MH_DEBUG
-#define MACH_DEBUG
-#define PIN_DEBUG
-#define MOTOR_DEBUG
-#define SENSOR_DEBUG
-#define WEI_DEBUG
+//#define MAIN_DEBUG
+//#define MH_DEBUG
+//#define MACH_DEBUG
+//#define PIN_DEBUG
+//#define MOTOR_DEBUG
+//#define SENSOR_DEBUG
+//#define WEI_DEBUG
 //#define INI_DEBUG
 
 
@@ -24,6 +24,12 @@
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
 #include <WebSocketsServer.h> 
 #include <liquidcrystal_i2c.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266HTTPUpdateServer.h>
+
+#define update_username "admin"
+#define update_password "123454321"
+#define update_path "/update"
 
 #define COLUMS           16
 #define ROWS             2
@@ -35,6 +41,9 @@ SoftwareSerial SWSerial;
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
 
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
+
+ESP8266WebServer HTTP(80);
+ESP8266HTTPUpdateServer httpUpdater;
 
 void setup() {
   Serial.begin(9600);
@@ -102,10 +111,13 @@ void setup() {
   MH.webSocket.begin();
   MH.webSocket.onEvent(webSocketEvent);
   MH.bLCD = bLCD;
+  httpUpdater.setup(&HTTP, update_path, update_username, update_password);
+  HTTP.begin();
 }
 
 void loop() {
   MH.process();
+  HTTP.handleClient();
   delay(10);
 }
 
