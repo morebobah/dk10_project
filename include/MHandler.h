@@ -270,8 +270,11 @@ class MHandler {
       String result;
       String key;
       bool bSend = false;
-      for(std::vector<COMMAND>::iterator it = current_queue.begin(); it != current_queue.end(); ++it){
-        DynamicJsonDocument doc(4096);
+      std::vector<COMMAND>::iterator M_it;
+      std::vector<COMMAND>::iterator S_it;
+      std::vector<COMMAND>::iterator W_it;
+      DynamicJsonDocument doc(4096);
+      for(std::vector<COMMAND>::iterator it = current_queue.begin(); it != current_queue.end(); it++){
         doc["state"][0]["machine"] = (*it).machine;
         switch((*it).type){
           case 1:
@@ -281,7 +284,6 @@ class MHandler {
             doc["state"][0]["pins"][key] = this->M.at((*it).machine)->at((*it).pin)->get_state();
             bSend = true;
             current_queue.pop_back();
-            this->next_command();
           }
           break;
           case 2:
@@ -312,6 +314,9 @@ class MHandler {
         if(current_queue.size()==0){
           break;
         }
+      }
+      if(current_queue.size()==0){
+          this->next_command();
       }
     };
   
