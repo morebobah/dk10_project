@@ -238,7 +238,7 @@ class MHandler {
           uint8_t tpin = (*pit)->get_type();
           String key = result.substring(tpin, tpin + 1) + String((*pit)->get_pin());
           if(tpin==WEIGHER){
-            doc["state"][mchnum]["pins"][key] = ((Weigher *)(*pit))->getV();
+            doc["state"][mchnum]["pins"][key] = ((Weigher *)(*pit))->getW();
           }else{
             doc["state"][mchnum]["pins"][key] = (*pit)->get_state();
           }
@@ -295,11 +295,11 @@ class MHandler {
             }
             break;
           case 4:
-            int weight = ((Weigher *)(this->M.at((*it).machine)->at((*it).pin)))->getV();
+            int weight = ((Weigher *)(this->M.at((*it).machine)->at((*it).pin)))->getW();
             key = "W" + String(this->M.at((*it).machine)->at((*it).pin)->get_pin());
             doc["state"][0]["pins"][key] = weight;
-            bSend = true;
-            if(weight>=(*it).value or weight<0){
+            //bSend = true;
+            if(weight>=(*it).value){//or weight < 0){
               current_queue.erase(it);
             }
             break;
@@ -368,7 +368,7 @@ class MHandler {
       #ifdef MH_DEBUG
         if(!jsonFile) Serial.println("MH: Don't open file");
       #endif
-      DynamicJsonDocument doc(4096);
+      DynamicJsonDocument doc(6096);
       DeserializationError error = deserializeJson(doc, jsonFile);
       if (error) {
         #ifdef MH_DEBUG

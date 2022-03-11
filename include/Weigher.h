@@ -73,7 +73,7 @@ class Weigher : public Pin {
       return -1;
     };
 
-    int getW(int v0 = 156){
+    int getW(int v0 = 150){
       int v = this->getV();
       return (v-v0)*4;
     };

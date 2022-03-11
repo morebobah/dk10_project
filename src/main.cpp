@@ -74,11 +74,10 @@ void setup() {
   mcp[3].begin_I2C(0x23);
   //pinMode(9, INPUT);
   
-  #ifdef MAIN_DEBUG
-    Serial.println();
-    Serial.println("Main: Serial begin");
-    SWSerial.begin(9600,SWSERIAL_8N1, D4, D3);
-  #endif
+  Serial.println();
+  Serial.println("Main: Serial begin");
+  SWSerial.begin(9600,SWSERIAL_8N1, D4, D3);
+
   pinMode(D4, INPUT);
   #ifdef MAIN_DEBUG
     Serial.println("Main: SWSerial begin");
@@ -91,6 +90,7 @@ void setup() {
     #ifdef MAIN_DEBUG
       Serial.println("Main: SD failed");
     #endif
+    lcd.setCursor(0, 1);
     if(bLCD) lcd.print(F("SD failed")); 
     delay(1000);
     bSD = SD.begin(SS);
