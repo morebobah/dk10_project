@@ -73,18 +73,20 @@ void setup() {
   mcp[2].begin_I2C(0x22);
   mcp[3].begin_I2C(0x23);
   //pinMode(9, INPUT);
+
+  SWSerial.begin(9600,SWSERIAL_8N1, D4, D3);
+  pinMode(D4, INPUT);
+  SWSerial.setTimeout(200);
   
   #ifdef MAIN_DEBUG
     Serial.println();
     Serial.println("Main: Serial begin");
-    SWSerial.begin(9600,SWSERIAL_8N1, D4, D3);
   #endif
-  pinMode(D4, INPUT);
   #ifdef MAIN_DEBUG
     Serial.println("Main: SWSerial begin");
     Serial.setTimeout(50);
   #endif
-  SWSerial.setTimeout(100);
+  
 
   boolean bSD = SD.begin(SS);
   while(!bSD){

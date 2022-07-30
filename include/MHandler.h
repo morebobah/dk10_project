@@ -226,7 +226,7 @@ class MHandler {
 
     String get_status(){
       String result = "MSW";
-      DynamicJsonDocument doc(4096);
+      DynamicJsonDocument doc(10000);
       doc["status"] = this->status;
       doc["prg_id"] = this->prg_id;
       doc["default_on"] = this->on;
@@ -238,7 +238,7 @@ class MHandler {
           uint8_t tpin = (*pit)->get_type();
           String key = result.substring(tpin, tpin + 1) + String((*pit)->get_pin());
           if(tpin==WEIGHER){
-            doc["state"][mchnum]["pins"][key] = ((Weigher *)(*pit))->getV();
+            doc["state"][mchnum]["pins"][key] = ((Weigher *)(*pit))->getW();
           }else{
             doc["state"][mchnum]["pins"][key] = (*pit)->get_state();
           }
@@ -273,7 +273,7 @@ class MHandler {
       std::vector<COMMAND>::iterator M_it;
       std::vector<COMMAND>::iterator S_it;
       std::vector<COMMAND>::iterator W_it;
-      DynamicJsonDocument doc(4096);
+      DynamicJsonDocument doc(10000);
       for(std::vector<COMMAND>::iterator it = current_queue.begin(); it != current_queue.end(); it++){
         doc["state"][0]["machine"] = (*it).machine;
         switch((*it).type){
@@ -295,11 +295,11 @@ class MHandler {
             }
             break;
           case 4:
-            int weight = ((Weigher *)(this->M.at((*it).machine)->at((*it).pin)))->getV();
+            int weight = ((Weigher *)(this->M.at((*it).machine)->at((*it).pin)))->getW();
             key = "W" + String(this->M.at((*it).machine)->at((*it).pin)->get_pin());
             doc["state"][0]["pins"][key] = weight;
             bSend = true;
-            if(weight>=(*it).value or weight<0){
+            if(weight>=(*it).value){
               current_queue.erase(it);
             }
             break;
@@ -368,7 +368,7 @@ class MHandler {
       #ifdef MH_DEBUG
         if(!jsonFile) Serial.println("MH: Don't open file");
       #endif
-      DynamicJsonDocument doc(4096);
+      DynamicJsonDocument doc(7000);
       DeserializationError error = deserializeJson(doc, jsonFile);
       if (error) {
         #ifdef MH_DEBUG
@@ -439,7 +439,14 @@ class MHandler {
         return 8; 
       }
 
-      if(strncmp(payload, "alarm", 5)==0) {stopallmotors(); this->time_alarm = millis();} //stop all motors for 5 minutes
+      if(strncmp(payload, "alarm", 5)==0) {
+        stopallmotors(); 
+        this->status = MCHN_STATUS::stoped;
+        bauto = false;
+        this->auto_queue.clear();
+        this->hand_queue.clear();
+        this->sendAnswer(this->get_status());
+      } //stop all motors for 5 minutes
 
       //pause current program
       if(strncmp(payload, "pause_prg", 9)==0){ 
@@ -484,7 +491,7 @@ class MHandler {
     };
 
     bool downloadprg(String gcode){
-      DynamicJsonDocument doc(4096);
+      DynamicJsonDocument doc(7000);
       String prgnum = gcode.substring(8);
       if(prgnum.toInt()==0) return false;
       String result = "";
@@ -613,11 +620,11 @@ class MHandler {
 
     void process(){
       this->webSocket.loop();
-      if(time_alarm>0){
-        if((millis() - time_alarm)<300000){
-            return;
-          }
-      }
+      //if(time_alarm>0){
+      //  if((millis() - time_alarm)<300000){
+      //      return;
+      //    }
+      //}
       if(this->bauto){
         if(this->auto_queue.size()>0){
           //Serial.println(auto_queue.size());

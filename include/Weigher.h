@@ -24,6 +24,8 @@ struct response{
 };
 
 class Weigher : public Pin {
+  private:
+   int V0;
   public:
     uint8_t m_adr;
     HardwareSerial *m_serial;
@@ -31,6 +33,11 @@ class Weigher : public Pin {
     Weigher(HardwareSerial *serial_, uint8_t adr_) : Pin(0, adr_, WEIGHER){
       this->m_adr = adr_;
       this->m_serial = serial_;
+      this->V0 = 0;
+      for(int i = 0; i<10; i++){
+        int v = this->getV();
+        if(this->V0<v && v>0) this->V0 = v;
+      }
 
       #ifdef WEI_DEBUG
         Serial.printf("Weigher: Create weigher Serial adress %d\n", adr_);
@@ -73,9 +80,9 @@ class Weigher : public Pin {
       return -1;
     };
 
-    int getW(int v0 = 156){
+    int getW(){
       int v = this->getV();
-      return (v-v0)*4;
+      return (v-this->V0)*4;
     };
 
     uint16_t CRC16_2(unsigned char *buf, int len){  
