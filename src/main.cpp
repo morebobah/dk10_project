@@ -93,6 +93,7 @@ void setup() {
     #ifdef MAIN_DEBUG
       Serial.println("Main: SD failed");
     #endif
+    lcd.setCursor(0, 1);
     if(bLCD) lcd.print(F("SD failed")); 
     delay(1000);
     bSD = SD.begin(SS);
