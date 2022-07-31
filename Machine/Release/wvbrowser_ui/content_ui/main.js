@@ -83,6 +83,7 @@ const messageHandler = event => {
                 if (keys.includes("status")) {
                     out(event.data);
                     refreshStatus(objJSON);
+                    out(objJSON['smartkey']);
                 }
                 if (keys.includes("downloadprg")) {
                     loadfromsource(objJSON['downloadprg']['name'], objJSON['downloadprg']['listing']);
@@ -141,7 +142,7 @@ function refreshStatus(objJSON) {
         });
         Array.from(document.getElementById('machine_' + mC).getElementsByClassName('SIco')).forEach(function(pins) {
             if (objJSON['state'][mach_num]['pins'][pins.getAttribute("widget_id")] !== undefined)
-                pins.style.backgroundImage = (objJSON['state'][mach_num]['pins'][pins.getAttribute("widget_id")] == default_on) ? 'url(img/small_sensor_run.png)' : 'url(img/small_sensor.png)';
+                pins.style.backgroundImage = (objJSON['state'][mach_num]['pins'][pins.getAttribute("widget_id")] == default_on) ? 'url(img/small_sensor.png)' : 'url(img/small_sensor_run.png)';
         });
         Array.from(document.getElementById('machine_' + mC).getElementsByClassName('WIco')).forEach(function(pins) {
             if (objJSON['state'][mach_num]['pins'][pins.getAttribute("widget_id")] !== undefined)
@@ -622,8 +623,8 @@ function edit_div(item) {
     var rect = item.getBoundingClientRect();
     editbox.style.position = "absolute";
     editbox.style.zIndex = "999";
-    editbox.style.top = rect.top + "px";
-    editbox.style.left = rect.left + "px";
+    editbox.style.top = rect.top - 100 + "px";
+    editbox.style.left = rect.left - 10 + "px";
     editbox.style.width = (rect.right - rect.left) + "px";
     editbox.style.height = (rect.bottom - rect.top) + "px";
     editbox.value = item.innerText;
@@ -658,6 +659,44 @@ function parze(gcodes) {
     insert_gcode_item(gcl(gcds.substring(from_pos)));
 }
 
+function parzeCommand(gcode) {
+    result = ''
+    let re = /G(\d+)/
+    if (re.test(gcode)) {
+        let re_match1 = re.exec(gcode)
+        let mach = re_match1[1]
+        gcode.substring(re_match1[0].length, gcode.length).split('+').forEach(item => {
+            let re = /(T|W|S|M)(\d+)(V(\d+))?/
+            if (re.test(item)) {
+                let re_match2 = re.exec(item)
+                let elem = ''
+                if (re_match2[1] != 'T') {
+                    elem = document.getElementById('label' + mach + '.' + re_match2[1] + '.' + parseInt(re_match2[2], 10).toString()).innerText
+                }
+                switch (re_match2[1]) {
+                    case 'T':
+                        result += '<div class="gct">Ждем таймер в течении: ' + re_match2[2] + '</div>'
+                        break
+                    case 'W':
+                        result += '<div class="gct">Ждем ' + elem + ' до веса: ' + re_match2[4] + 'кг</div>'
+                        break
+                    case 'S':
+                        result += '<div class="gct">Ждем сработки ' + elem + '</div>'
+                        break
+                    case 'M':
+                        if (result.length > 0) {
+                            result += (re_match2[4] == '1') ? '<div class="gct">И запускаем ' : '<div class="gct">И останавливаем '
+                        } else {
+                            result = (re_match2[4] == '1') ? '<div class="gct">Запускаем ' : '<div class="gct">Останавливаем '
+                        }
+                        result += elem + '</div>'
+                }
+            }
+        })
+    }
+    return result
+}
+
 function insert_gcode_item(item) {
     let bMainName = true;
     let recBar = document.getElementById('recordsBar');
@@ -676,19 +715,34 @@ function insert_gcode_item(item) {
 function gcl(gc_line) {
     let item = document.createElement('div');
     item.className = 'gcode_item';
+    let item_top = document.createElement('div')
+    item_top.className = 'gctop'
     let item_close = document.createElement('div');
     item_close.className = 'gcode_close';
     item_close.innerText = ' ';
-    item.append(item_close);
-    item_close.addEventListener('click', function(e) { e.target.parentElement.remove(); });
+    item_top.append(item_close);
+
+
     let item_cursor = document.createElement('div');
     item_cursor.className = 'gcode_label';
-    item.append(item_cursor);
+    item_top.append(item_cursor);
+    item.append(item_top);
+
+    let item_wrapper = document.createElement('div');
+
+    item_wrapper.innerHTML += parzeCommand(gc_line)
+    item.append(item_wrapper)
+
+    item_close.addEventListener('click', function(e) { e.target.parentElement.parentElement.remove(); });
+
+    let item_bot = document.createElement('div')
+    item_bot.className = 'gcbot'
     let item_value = document.createElement('div');
     item_value.className = 'gcode';
     item_value.innerText = gc_line;
-    item.append(item_value);
+    item_bot.append(item_value);
     item_value.addEventListener('click', function(e) { edit_div(e.target); });
+    item.append(item_bot);
 
     return item;
 }
@@ -723,7 +777,7 @@ function refreshPanel(objJSON) {
         machineControl.id = 'machine_' + key;
         let labelControl = document.createElement('div');
         labelControl.className = 'machLabel';
-        labelControl.innerHTML = 'Machine: ' + key;
+        labelControl.innerHTML = objJSON["MACHINE"][key]["xName"];
         machineControl.append(labelControl);
 
         let icoControl = document.createElement('div');
@@ -785,6 +839,10 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
 
     var keys = Object.keys(objJSON);
     keys.forEach(function(key, pinum) {
+        let pinLabel = document.createElement('div');
+        pinLabel.className = 'pin_label';
+        pinLabel.id = 'label' + machine + '.' + objJSON[key]["PINTYPE"] + '.' + pinum
+        pinLabel.innerText = objJSON[key]["xName"];
         let pinControl = document.createElement('div');
         pinControl.className = objJSON[key]["PINTYPE"];
         pinControl.id = 'pin[' + objJSON[key]["ADR"] + ']';
@@ -898,6 +956,7 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
             icoUpd.className = objJSON[key]["PINTYPE"] + "Upd";
             pinControl.append(icoUpd);
             icoUpd.addEventListener('click', function(e) {
+                sendgcode("status");
                 let gcode = 'G' + machine + objJSON[key]["PINTYPE"];
                 if (pinum < 10) {
                     gcode += '0';
@@ -910,7 +969,8 @@ function refreshPins(ctrlBar, objJSON, machine = 0) {
                 recordBar.append(gRec);
             });
         }
-
+        if (Object.keys(objJSON[key]).includes("xName"))
+            ctrlBar.append(pinLabel);
         ctrlBar.append(pinControl);
     });
 }
@@ -924,7 +984,7 @@ function sendgcode(code = '') {
         var gcodes = Array.from(document.getElementsByClassName("gcode"));
         gcodes.forEach(div => {
             code += div.innerText;
-            div.previousSibling.style.backgroundColor = '#39e929';
+            div.parentElement.parentElement.firstChild.firstChild.nextSibling.style.backgroundColor = '#39e929';
         });
     }
     sendText(code)
@@ -964,16 +1024,16 @@ function init() {
     }
     tab.checked = true;
 
-    /*
-                            document.addEventListener("contextmenu", function(e) {
-                                e.preventDefault();
-                            });
-    
-                            document.addEventListener("keydown", function(e) {
-                                if (e.key === 'Escape') sendgcode('alarm');
-                                document.body.disabled = true;
-                            });
-                            */
+
+    //document.addEventListener("contextmenu", function(e) {
+    //    e.preventDefault();
+    //});
+
+    document.addEventListener("keydown", function(e) {
+        if (e.key === 'Escape') sendgcode('alarm');
+        document.body.disabled = true;
+    });
+
     //let viewportItemsCapacity = Math.round(window.innerHeight / itemHeight);
     //addUIListeners();
     //getMoreHistoryItems(viewportItemsCapacity);

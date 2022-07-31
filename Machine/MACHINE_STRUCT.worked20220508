@@ -1,0 +1,73 @@
+{
+    "MACHINE": [{
+            "NUMBER": 0,
+            "xName": "Дк-10",
+            "PINS": [
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 15, "xName": "Шибер левого бункера" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 14, "xName": "Шибер правого бункера" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 13, "xName": "Вибратор левого бункера" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 12, "xName": "Вибратор правого бункера" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 11, "xName": "Транспортер" },
+                { "PINTYPE": "W", "HWObj": 0, "ADR": 1, "xName": "Весы дозатора" }
+            ]
+        },
+
+
+        {
+            "NUMBER": 1,
+            "xName": "Узел приготовления смеси",
+            "PINS": [
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 10, "xName": "СКИП вниз." },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 9, "xName": "СКИП вверх." },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 8, "xName": "Подача воды и включение насоса" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 7, "xName": "Шнек цемента" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 6, "xName": "Сброс цемента" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 2, "xName": "Вибратор бункера цемента" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 5, "xName": "Нижняя заслонка химдобавки" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 4, "xName": "Подача воды в емкость химдобавки" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 3, "xName": "Слив воды в смеситель" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 0, "xName": "Транспортер подачи готовой смеси" },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 15, "xName": "Смеситель" },
+                { "PINTYPE": "W", "HWObj": 0, "ADR": 2, "xName": "Весы воды" },
+                { "PINTYPE": "W", "HWObj": 0, "ADR": 3, "xName": "Весы химдобавок" },
+                { "PINTYPE": "W", "HWObj": 0, "ADR": 4, "xName": "Весы цемента" },
+                { "PINTYPE": "M", "HWObj": 0, "ADR": 1, "xName": "Резерв. Свободный 15." }
+            ]
+        },
+
+        {
+            "NUMBER": 2,
+            "xName": "Вибропресс",
+            "PINS": [
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 13, "xName": "Назад. Толкатель поддонов." },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 2, "xName": "Концевик назад. Толкатель поддонов." },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 14, "xName": "Вперед. Толкатель поддонов." },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 3, "xName": "Концевик вперед. Толкатель поддонов." },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 12, "xName": "Матрица вверх" },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 10, "xName": "Концевик вверх. Матрица." },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 11, "xName": "Матрица вниз" },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 11, "xName": "Концевик вниз. Матрица." },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 10, "xName": "Вперед. Большого бункера загрузчик" },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 5, "xName": "Концевик вперед. Большого бункера загрузчик." },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 9, "xName": "Назад. Большого бункера загрузчик" },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 4, "xName": "Концевик назад. Большого бункера загрузчик." },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 4, "xName": "Назад. Маленького бункера загрузчик" },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 6, "xName": "Концевик назад. Малого бункера загрузчик." },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 3, "xName": "Вперед. Маленького бункера загрузчик" },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 7, "xName": "Концевик вперед. Малого бункера загрузчик." },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 7, "xName": "Пуансон вверх" },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 9, "xName": "Концевик вверх. Пуансон." },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 8, "xName": "Пуансон вниз" },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 8, "xName": "Концевик вниз. Пуансон." },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 5, "xName": "Открыть заслонку смисителя" },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 0, "xName": "Концевик заслонка смесителя открыта" },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 6, "xName": "Закрыть заслонку смесителя" },
+                { "PINTYPE": "S", "HWObj": 2, "ADR": 1, "xName": "Концевик заслонка смесителя закрыта" },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 2, "xName": "Вибратор маленького бункера" },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 1, "xName": "Вибратор большого бункера" },
+                { "PINTYPE": "M", "HWObj": 1, "ADR": 0, "xName": "Вибростол" }
+            ]
+        }
+    ]
+
+}

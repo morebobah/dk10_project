@@ -1,0 +1,52 @@
+{
+	"MACHINE":[
+		{"NUMBER":0,"PINS": [
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":15},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":14},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":13},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":12},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":11},
+			{"PINTYPE":"W", "HWObj":0 ,"ADR":1}]
+		},
+		
+	
+		{"NUMBER":1,"PINS": [
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":10},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":9},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":8},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":7},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":6},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":5},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":4},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":3},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":2},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":1},
+			{"PINTYPE":"M", "HWObj":0 ,"ADR":0},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":15},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":14},
+			{"PINTYPE":"W", "HWObj":0 ,"ADR":2},
+			{"PINTYPE":"W", "HWObj":0 ,"ADR":3},
+			{"PINTYPE":"W", "HWObj":0 ,"ADR":4}]
+		},
+	
+		{"NUMBER":2,"PINS": [
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":13},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":12},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":11},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":10},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":9},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":8},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":7},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":6},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":5},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":4},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":3},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":2},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":1},
+			{"PINTYPE":"M", "HWObj":1 ,"ADR":0},
+			{"PINTYPE":"S", "HWObj":2 ,"ADR":8},
+			{"PINTYPE":"S", "HWObj":2 ,"ADR":9}]
+		}
+	]
+	
+}
